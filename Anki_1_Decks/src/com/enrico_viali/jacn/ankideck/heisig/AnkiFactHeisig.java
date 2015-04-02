@@ -4,6 +4,7 @@ import java.sql.*;
 
 import org.apache.log4j.Logger;
 
+import com.enrico_viali.jacn.anki1deck.generic.Anki1Fact;
 import com.enrico_viali.jacn.ankideck.generic.*;
 import com.enrico_viali.utils.Utl;
 
@@ -14,7 +15,7 @@ import com.enrico_viali.utils.Utl;
  * 
  */
 
-public class AnkiFactHeisig extends AnkiFact {
+public class AnkiFactHeisig extends Anki1Fact {
 
 	public AnkiFactHeisig(long factID, String s,IAnkiDeckGeneric deckMgrPar) {
 		super(factID,deckMgrPar);

@@ -1,5 +1,6 @@
 package com.enrico_viali.jacn.ankideck.generic;
 
+import com.enrico_viali.jacn.anki1deck.generic.Anki1Fact;
 import com.enrico_viali.jacn.common.FieldUpdate;
 
 /**
@@ -14,7 +15,7 @@ public interface IAnkiDeckGeneric {
 
 	public abstract String getDeckName();
 
-	AnkiOneDeckDataModel getDm();
+	IAnkiDeckDataModel getDm();
 	
 	public abstract boolean isOK();
 
@@ -24,17 +25,17 @@ public interface IAnkiDeckGeneric {
 
 	public abstract void setExpression(String s);
 
-	public abstract AnkiFact buildFact(long factID, String expressionName);
+	public abstract Anki1Fact buildFact(long factID, String expressionName);
 
-	public abstract boolean addCard(AnkiCard c);
+	public abstract boolean addCard(IAnkiCard c);
 
 	public abstract boolean addCardModel(AnkiCardModel e);
 
-	public abstract AnkiCardModel getCardModelByID(long id);
+	public abstract IAnkiCard getCardModelByID(long id);
 
-	public abstract boolean addFact(AnkiFact e);
+	public abstract boolean addFact(Anki1Fact e);
 
-	public abstract boolean addFact(AnkiFact e, boolean allowDuplicates);
+	public abstract boolean addFact(Anki1Fact e, boolean allowDuplicates);
 
 	public abstract boolean load();
 
@@ -48,9 +49,9 @@ public interface IAnkiDeckGeneric {
 	 */
 	public abstract boolean readFromFile(String filepath, String encoding);
 
-	public abstract AnkiFact getFactByExp(String kanjiPar);
+	public abstract Anki1Fact getFactByExp(String kanjiPar);
 
-	public abstract AnkiFact getFactByID(long nr);
+	public abstract Anki1Fact getFactByID(long nr);
 
 	public abstract boolean getLoaded();
 

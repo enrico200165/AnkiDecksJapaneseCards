@@ -1,10 +1,15 @@
-package com.enrico_viali.jacn.ankideck.generic;
+package com.enrico_viali.jacn.anki1deck.generic;
 
 import java.sql.*;
 import java.util.*;
 
 import org.apache.log4j.Logger;
 
+import com.enrico_viali.jacn.ankideck.generic.AnkiCardModel;
+import com.enrico_viali.jacn.ankideck.generic.FieldModel;
+import com.enrico_viali.jacn.ankideck.generic.IAnkiCard;
+import com.enrico_viali.jacn.ankideck.generic.IAnkiDeckDataModel;
+import com.enrico_viali.jacn.ankideck.generic.IAnkiDeckGeneric;
 import com.enrico_viali.jacn.common.FieldUpdate;
 import com.enrico_viali.libs.rdb_jdbc.*;
 import com.enrico_viali.utils.Utl;
@@ -14,10 +19,10 @@ import com.enrico_viali.utils.Utl;
  * @author it068498
  * 
  */
-public class AnkiTwoDeckDataModel   {
+public class Anki1DeckDataModel implements IAnkiDeckDataModel   {
 
 	// protected per implementare il singleton
-	public AnkiTwoDeckDataModel(IRDBManager dmdb) throws Exception {
+	public Anki1DeckDataModel(IRDBManager dmdb) throws Exception {
 		this.dmdb = dmdb;
 	}
 
@@ -35,11 +40,19 @@ public class AnkiTwoDeckDataModel   {
 		}
 	}
 
-	public boolean check() {
+	/* (non-Javadoc)
+     * @see com.enrico_viali.jacn.anki1deck.generic.IAnkiDeckDataModel#check()
+     */
+	@Override
+    public boolean check() {
 		return !uniqueViolation();
 	}
 
-	public boolean copyField(String fNameSource, String fNameTarget,
+	/* (non-Javadoc)
+     * @see com.enrico_viali.jacn.anki1deck.generic.IAnkiDeckDataModel#copyField(java.lang.String, java.lang.String, com.enrico_viali.jacn.common.FieldUpdate)
+     */
+	@Override
+    public boolean copyField(String fNameSource, String fNameTarget,
 			FieldUpdate updTime) {
 		// TODO Auto-generated method stub
 		return false;
@@ -50,6 +63,8 @@ public class AnkiTwoDeckDataModel   {
 		return ids;
 	}
 
+	
+	
 	Map<String, FieldModel> getFielModels() {
 		HashMap<String, FieldModel> fmodels = new HashMap<String, FieldModel>();
 
@@ -150,7 +165,10 @@ public class AnkiTwoDeckDataModel   {
 		return false;
 	}
 
-	ArrayList<String> duplicates() {
+	
+
+	   @Override
+       public ArrayList<String> duplicates() {
 		ArrayList<String> dups = new ArrayList<String>();
 
 		String s = "select value, count (*) from fields, fieldModels"
@@ -183,12 +201,11 @@ public class AnkiTwoDeckDataModel   {
 
 	
 	
-	/**
-	 * @param tabella
-	 * @return
-	 * @throws SQLException
-	 */
-	public boolean readFactsDeck(IAnkiDeckGeneric mgr, String keyFieldName) {
+	/* (non-Javadoc)
+     * @see com.enrico_viali.jacn.anki1deck.generic.IAnkiDeckDataModel#readFactsDeck(com.enrico_viali.jacn.ankideck.generic.IAnkiDeckGeneric, java.lang.String)
+     */
+	@Override
+    public boolean readFactsDeck(IAnkiDeckGeneric mgr, String keyFieldName) {
 		Statement stFacts;
 
 		if (dmdb == null) {
@@ -206,17 +223,13 @@ public class AnkiTwoDeckDataModel   {
 				int nr = 0;
 				stFacts = dmdb.getConnection().createStatement();
 				ResultSet factsRs = stFacts
-						.executeQuery("SELECT flds FROM notes");
+						.executeQuery("SELECT id FROM facts");
 				while (factsRs.next()) {
 					nr++;
-					String fields = factsRs.getString(1);
-					log.info("letto: "+fields);
-	
-					/*long factID = factsRs.getLong(1);
+					long factID = factsRs.getLong(1);
 					factIDs.add(factID);
 					log.debug("letta fact entry " + ", ID: "
 							+ factsRs.getLong(1));
-					*/
 				}
 				if (nr < 200)
 					log.warn("too few facts found: " + nr);
@@ -235,7 +248,7 @@ public class AnkiTwoDeckDataModel   {
 					Statement stFields = dmdb.getConnection().createStatement();
 					ResultSet fieldsRs = stFields
 							.executeQuery(fieldsQueryString);
-					AnkiFact e = mgr.buildFact(factID, keyFieldName);
+					Anki1Fact e = mgr.buildFact(factID, keyFieldName);
 					if (e.fillFromRS(fieldsRs, factID)) {
 						log.debug("letto&added fatto: " + e.toString());
 						if (!mgr.addFact(e)) {
@@ -264,7 +277,11 @@ public class AnkiTwoDeckDataModel   {
 		return true;
 	}
 
-	public boolean readCardModels(IAnkiDeckGeneric mgr) throws SQLException {
+	/* (non-Javadoc)
+     * @see com.enrico_viali.jacn.anki1deck.generic.IAnkiDeckDataModel#readCardModels(com.enrico_viali.jacn.ankideck.generic.IAnkiDeckGeneric)
+     */
+	@Override
+    public boolean readCardModels(IAnkiDeckGeneric mgr) throws SQLException {
 		Statement stFacts;
 
 		if (dmdb == null) {
@@ -307,7 +324,7 @@ public class AnkiTwoDeckDataModel   {
 					ResultSet fieldsRs = stFields.executeQuery(queryStr);
 					AnkiCardModel c = new AnkiCardModel(id,
 							Utl.NOT_INITIALIZED_STRING);
-					if (c.fillEntryFromRS(fieldsRs, id)) {
+					if (c.fillFromRS(fieldsRs, id)) {
 						log.debug("letto&added: " + c.toString());
 						if (!mgr.addCardModel(c)) {
 							log.error("failed to insert fact in hashtable, factID: "
@@ -334,7 +351,11 @@ public class AnkiTwoDeckDataModel   {
 		return true;
 	}
 
-	public boolean readCards(IAnkiDeckGeneric mgr) throws SQLException {
+	/* (non-Javadoc)
+     * @see com.enrico_viali.jacn.anki1deck.generic.IAnkiDeckDataModel#readCards(com.enrico_viali.jacn.ankideck.generic.IAnkiDeckGeneric)
+     */
+	@Override
+    public boolean readCards(IAnkiDeckGeneric mgr) throws SQLException {
 		Statement stFacts;
 
 		if (dmdb == null) {
@@ -373,12 +394,12 @@ public class AnkiTwoDeckDataModel   {
 					}
 					Statement stFields = dmdb.getConnection().createStatement();
 					ResultSet fieldsRs = stFields.executeQuery(queryStr);
-					AnkiCard c = new AnkiCard(id, "Kanji");
+					IAnkiCard c = new Anki1Card(id, "Kanji");
 					if (c.fillFromRS(fieldsRs, id)) {
 						log.info("letto&added card: " + c.toString());
 						if (!mgr.addCard(c)) {
 							log.error("failed to insert fact in hashtable, factID: "
-									+ c.id
+									+ c.getID()
 									+ "query: "
 									+ queryStr
 									+ "\ndump: "
@@ -387,7 +408,7 @@ public class AnkiTwoDeckDataModel   {
 						}
 					} else {
 						log.error("failed to fill fact from result set, factID: "
-								+ c.id + "\nquery: " + queryStr);
+								+ c.getID() + "\nquery: " + queryStr);
 						return false;
 					}
 				}
@@ -401,7 +422,11 @@ public class AnkiTwoDeckDataModel   {
 		return true;
 	}
 
-	public boolean updateFieldValue(long fieldId, String newValue) {
+	/* (non-Javadoc)
+     * @see com.enrico_viali.jacn.anki1deck.generic.IAnkiDeckDataModel#updateFieldValue(long, java.lang.String)
+     */
+	@Override
+    public boolean updateFieldValue(long fieldId, String newValue) {
 
 		newValue = JDBCEVUtility.escapeForSQL(newValue);
 		String sqlupdate = "UPDATE fields SET value = '" + newValue
@@ -449,5 +474,5 @@ public class AnkiTwoDeckDataModel   {
 
 	
 	private static org.apache.log4j.Logger log = Logger
-			.getLogger(AnkiTwoDeckDataModel.class);
+			.getLogger(Anki1DeckDataModel.class);
 }

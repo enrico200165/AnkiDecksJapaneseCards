@@ -2,6 +2,7 @@ package com.enrico_viali.jacn.ankideck.kanji_enrico;
 
 import org.apache.log4j.Logger;
 
+import com.enrico_viali.jacn.anki1deck.generic.Anki1Fact;
 import com.enrico_viali.jacn.ankideck.generic.*;
 import com.enrico_viali.jacn.ankideck.heisig.*;
 import com.enrico_viali.libs.rdb_jdbc.*;
@@ -24,7 +25,7 @@ public class AnkiDeckMgrKanjiEnrico extends AnkiDeckGeneric {
 	
 	
 	@Override
-	public boolean addFact(AnkiFact e) {
+	public boolean addFact(Anki1Fact e) {
 		if (e instanceof AnkiFactEnricoKanji) {
 			return super.addFact(e);
 		} else {
@@ -34,7 +35,7 @@ public class AnkiDeckMgrKanjiEnrico extends AnkiDeckGeneric {
 	}
 
 	@Override
-	public AnkiFact buildFact(long factID, String keyExpression) {
+	public Anki1Fact buildFact(long factID, String keyExpression) {
 		return new AnkiFactEnricoKanji(factID, keyExpression, this);
 	}
 		

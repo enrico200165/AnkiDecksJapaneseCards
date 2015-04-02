@@ -6,12 +6,13 @@ import java.util.Calendar;
 
 import org.apache.log4j.Logger;
 
+import com.enrico_viali.jacn.anki1deck.generic.Anki1Fact;
 import com.enrico_viali.jacn.common.*;
 import com.enrico_viali.utils.Utl;
 
 public class AnkiField {
 
-	public AnkiField(AnkiFact containerFactPar) {
+	public AnkiField(Anki1Fact containerFactPar) {
 		super();
 		this.id = Utl.NOT_INITIALIZED_INT;
 		this.factID = Utl.NOT_INITIALIZED_INT;
@@ -97,9 +98,15 @@ public class AnkiField {
 			}
 			case OVERWRITE: {
 				log.info("(overwrite with update)" + warnDifference);
+				
+		        log.error("esco, parte di codice/architettura da ridisegnare con cura");
+		        System.exit(1);
+		        // codice specifico e non generale, esco per non eseguirlo
+                /*				
 				this.containingFact.deckMgr.getDm().updateFieldValue(this.id, other);
 				this.value = other;
 				appendToEVkanjiToCorrect("fyi overwritten: " + warnDifference);
+				*/
 				break;
 			}
 			case NOOVWR_ERROR: {
@@ -227,7 +234,7 @@ public class AnkiField {
 		return false;
 	}
 
-	AnkiFact containingFact;
+	Anki1Fact containingFact;
 	long id;
 	int factID;
 	int fieldModelID;

@@ -6,10 +6,10 @@ import java.sql.Statement;
 
 import org.apache.log4j.Logger;
 
-import com.enrico_viali.jacn.ankideck.generic.AnkiOneDeckDataModel;
+import com.enrico_viali.jacn.anki1deck.generic.Anki1DeckDataModel;
 import com.enrico_viali.libs.rdb_jdbc.IRDBManager;
 
-public class ADeckHesigDataModel extends AnkiOneDeckDataModel {
+public class ADeckHesigDataModel extends Anki1DeckDataModel {
 
 	public ADeckHesigDataModel(IRDBManager dmdb) throws Exception {
 		super(dmdb);

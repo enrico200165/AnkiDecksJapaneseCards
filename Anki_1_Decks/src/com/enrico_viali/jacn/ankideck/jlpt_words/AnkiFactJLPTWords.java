@@ -5,10 +5,11 @@ import java.sql.SQLException;
 
 import org.apache.log4j.Logger;
 
+import com.enrico_viali.jacn.anki1deck.generic.Anki1Fact;
 import com.enrico_viali.jacn.ankideck.generic.*;
 import com.enrico_viali.jacn.common.FieldUpdate;
 
-public class AnkiFactJLPTWords extends AnkiFact {
+public class AnkiFactJLPTWords extends Anki1Fact {
 
 	public AnkiFactJLPTWords(long factId, String exprPar, IAnkiDeckGeneric dm) {
 		super(factId,dm);

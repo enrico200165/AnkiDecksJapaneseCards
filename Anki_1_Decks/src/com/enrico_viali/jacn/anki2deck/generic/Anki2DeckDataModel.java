@@ -1,10 +1,15 @@
-package com.enrico_viali.jacn.ankideck.generic;
+package com.enrico_viali.jacn.anki2deck.generic;
 
 import java.sql.*;
 import java.util.*;
 
 import org.apache.log4j.Logger;
 
+import com.enrico_viali.jacn.anki1deck.generic.Anki1Fact;
+import com.enrico_viali.jacn.ankideck.generic.AnkiCardModel;
+import com.enrico_viali.jacn.ankideck.generic.FieldModel;
+import com.enrico_viali.jacn.ankideck.generic.IAnkiCard;
+import com.enrico_viali.jacn.ankideck.generic.IAnkiDeckGeneric;
 import com.enrico_viali.jacn.common.FieldUpdate;
 import com.enrico_viali.libs.rdb_jdbc.*;
 import com.enrico_viali.utils.Utl;
@@ -14,10 +19,10 @@ import com.enrico_viali.utils.Utl;
  * @author it068498
  * 
  */
-public class AnkiOneDeckDataModel   {
+public class Anki2DeckDataModel   {
 
 	// protected per implementare il singleton
-	public AnkiOneDeckDataModel(IRDBManager dmdb) throws Exception {
+	public Anki2DeckDataModel(IRDBManager dmdb) throws Exception {
 		this.dmdb = dmdb;
 	}
 
@@ -206,13 +211,17 @@ public class AnkiOneDeckDataModel   {
 				int nr = 0;
 				stFacts = dmdb.getConnection().createStatement();
 				ResultSet factsRs = stFacts
-						.executeQuery("SELECT id FROM facts");
+						.executeQuery("SELECT flds FROM notes");
 				while (factsRs.next()) {
 					nr++;
-					long factID = factsRs.getLong(1);
+					String fields = factsRs.getString(1);
+					log.info("letto: "+fields);
+	
+					/*long factID = factsRs.getLong(1);
 					factIDs.add(factID);
 					log.debug("letta fact entry " + ", ID: "
 							+ factsRs.getLong(1));
+					*/
 				}
 				if (nr < 200)
 					log.warn("too few facts found: " + nr);
@@ -231,12 +240,12 @@ public class AnkiOneDeckDataModel   {
 					Statement stFields = dmdb.getConnection().createStatement();
 					ResultSet fieldsRs = stFields
 							.executeQuery(fieldsQueryString);
-					AnkiFact e = mgr.buildFact(factID, keyFieldName);
+					Anki1Fact e = mgr.buildFact(factID, keyFieldName);
 					if (e.fillFromRS(fieldsRs, factID)) {
 						log.debug("letto&added fatto: " + e.toString());
 						if (!mgr.addFact(e)) {
 							log.error("failed to insert fact in hashtable, factID: "
-									+ e.id
+									+ e.getID()
 									+ "query: "
 									+ fieldsQueryString
 									+ "\ndump: " + e.toString());
@@ -244,7 +253,7 @@ public class AnkiOneDeckDataModel   {
 						}
 					} else {
 						log.error("failed to fill fact from result set, factID: "
-								+ e.id + "\nquery: " + fieldsQueryString);
+								+ e.getID() + "\nquery: " + fieldsQueryString);
 						return false;
 					}
 				}
@@ -303,7 +312,7 @@ public class AnkiOneDeckDataModel   {
 					ResultSet fieldsRs = stFields.executeQuery(queryStr);
 					AnkiCardModel c = new AnkiCardModel(id,
 							Utl.NOT_INITIALIZED_STRING);
-					if (c.fillEntryFromRS(fieldsRs, id)) {
+					if (c.fillFromRS(fieldsRs, id)) {
 						log.debug("letto&added: " + c.toString());
 						if (!mgr.addCardModel(c)) {
 							log.error("failed to insert fact in hashtable, factID: "
@@ -369,12 +378,12 @@ public class AnkiOneDeckDataModel   {
 					}
 					Statement stFields = dmdb.getConnection().createStatement();
 					ResultSet fieldsRs = stFields.executeQuery(queryStr);
-					AnkiCard c = new AnkiCard(id, "Kanji");
+					IAnkiCard c = new Anki2Card(id, "Kanji");
 					if (c.fillFromRS(fieldsRs, id)) {
 						log.info("letto&added card: " + c.toString());
 						if (!mgr.addCard(c)) {
 							log.error("failed to insert fact in hashtable, factID: "
-									+ c.id
+									+ c.getID()
 									+ "query: "
 									+ queryStr
 									+ "\ndump: "
@@ -383,7 +392,7 @@ public class AnkiOneDeckDataModel   {
 						}
 					} else {
 						log.error("failed to fill fact from result set, factID: "
-								+ c.id + "\nquery: " + queryStr);
+								+ c.getID() + "\nquery: " + queryStr);
 						return false;
 					}
 				}
@@ -445,5 +454,5 @@ public class AnkiOneDeckDataModel   {
 
 	
 	private static org.apache.log4j.Logger log = Logger
-			.getLogger(AnkiOneDeckDataModel.class);
+			.getLogger(Anki2DeckDataModel.class);
 }

@@ -4,22 +4,32 @@ import java.util.*;
 
 import org.apache.log4j.Logger;
 
+import com.enrico_viali.jacn.anki1deck.generic.Anki1DeckDataModel;
+import com.enrico_viali.jacn.anki1deck.generic.Anki1Fact;
 import com.enrico_viali.jacn.common.FieldUpdate;
 import com.enrico_viali.libs.rdb_jdbc.*;
 
 public class AnkiDeckGeneric implements IAnkiDeckGeneric {
 
-	public AnkiDeckGeneric(String dName, AnkiOneDeckDataModel dmPar, String expr, boolean allowDuplicate) {
-		factsByExpression = new HashMap<String, AnkiFact>();
-		factsByID = new HashMap<Long, AnkiFact>();
+	public AnkiDeckGeneric(String dName, Anki1DeckDataModel dmPar, String expr, boolean allowDuplicate) {
+		factsByExpression = new HashMap<String, Anki1Fact>();
+		factsByID = new HashMap<Long, Anki1Fact>();
 		cardModelsByID = new HashMap<Long, AnkiCardModel>();
-		cardsByID = new HashMap<Long, AnkiCard>();
+		cardsByID = new HashMap<Long, IAnkiCard>();
 		
 		dm = dmPar;
 		loaded = false;
 		allowDuplicateExpressions = allowDuplicate;
 		_expression = expr;
-		fmodels = dm.getFielModels();
+		
+		
+		
+		log.error("esco, parte di codice/architettura da ridisegnare con cura");
+		System.exit(1);
+		// codice specifico e non generale, esco per non eseguirlo
+		// fmodels = dm.getFielModels();
+		
+		
 		deckName = dName;
 		log.info("fieldmodels: " + fmodels.toString());
 	}
@@ -85,8 +95,8 @@ public class AnkiDeckGeneric implements IAnkiDeckGeneric {
 	 * java.lang.String)
 	 */
 	@Override
-	public AnkiFact buildFact(long factID, String expressionName) {
-		return new AnkiFact(factID, this);
+	public Anki1Fact buildFact(long factID, String expressionName) {
+		return new Anki1Fact(factID, this);
 	}
 
 	/*
@@ -97,7 +107,7 @@ public class AnkiDeckGeneric implements IAnkiDeckGeneric {
 	 * .jacn.ankideck.generic.AnkiCard)
 	 */
 	@Override
-	public boolean addCard(AnkiCard c) {
+	public boolean addCard(IAnkiCard c) {
 		if (c.getID() == 1) {
 			log.debug("questo if serve solo a trappare un valore");
 		}
@@ -141,7 +151,7 @@ public class AnkiDeckGeneric implements IAnkiDeckGeneric {
 	 * com.enrico_viali.jacn.ankideck.generic.IAnkiDeck#getCardModelByID(long)
 	 */
 	@Override
-	public AnkiCardModel getCardModelByID(long id) {
+	public IAnkiCard getCardModelByID(long id) {
 		if (cardModelsByID.containsKey(id)) {
 			return cardModelsByID.get(id);
 		}
@@ -157,7 +167,7 @@ public class AnkiDeckGeneric implements IAnkiDeckGeneric {
 	 * .jacn.ankideck.generic.AnkiFact)
 	 */
 	@Override
-	public boolean addFact(AnkiFact e) {
+	public boolean addFact(Anki1Fact e) {
 		return addFact(e, this.allowDuplicateExpressions);
 	}
 
@@ -169,14 +179,14 @@ public class AnkiDeckGeneric implements IAnkiDeckGeneric {
 	 * .jacn.ankideck.generic.AnkiFact, boolean)
 	 */
 	@Override
-	public boolean addFact(AnkiFact e, boolean allowDuplicates) {
+	public boolean addFact(Anki1Fact e, boolean allowDuplicates) {
 		if (e.getID() == 1) {
 			log.debug("questo if serve solo a trappare un valore");
 		}
 
 		try {
 			if (!allowDuplicates && factsByExpression.containsKey(e.getKeyFieldName())) {
-				AnkiFact preexisting = factsByExpression.get(e.getKeyFieldName());
+				Anki1Fact preexisting = factsByExpression.get(e.getKeyFieldName());
 				log.warn("factID: " + e.getID() + " key gia presente: <" + e.getKeyFieldName() + ">"
 				+ "\npre-existing:                           factID: "
 				+ preexisting.getID() + "                   <" + preexisting.getKeyFieldName() + ">");
@@ -187,7 +197,7 @@ public class AnkiDeckGeneric implements IAnkiDeckGeneric {
 			}
 			factsByID.put(e.getID(), e);
 		} catch (AnkiDeckMalformedFact ex) {
-			log.error("ill formed fact, factID: " + e.id + "dump:\n" + e.toString());
+			log.error("ill formed fact, factID: " + e.getID() + "dump:\n" + e.toString());
 			return false;
 		}
 		return true;
@@ -222,7 +232,7 @@ public class AnkiDeckGeneric implements IAnkiDeckGeneric {
 			IRDBManager dmdb = new RDBManagerSQLite(deckPathName,true);
 			dmdb.open(false);
 			if (dm == null) {
-				dm = new AnkiOneDeckDataModel(dmdb);
+				dm = new Anki1DeckDataModel(dmdb);
 			}
 			if (!dm.readFactsDeck(this, keyExpression)) {
 				log.error("");
@@ -249,12 +259,12 @@ public class AnkiDeckGeneric implements IAnkiDeckGeneric {
 
 	boolean updateCardsFromEVCSV() {
 		int nr = 0;
-		for (AnkiCard c : this.cardsByID.values()) {
+		for (IAnkiCard c : this.cardsByID.values()) {
 			if (++nr % 1 == 0)
 				log.info("card: " + c.questionToString());
-			AnkiCardModel cm = getCardModelByID(c.getCardModelId());
+			IAnkiCard cm = getCardModelByID(c.getCardModelId());
 			log.debug("card model relativo a card: " + c.getID() + "\nmodel: " + cm.toString());
-			AnkiFact f = getFactByID(c.getFactId());
+			Anki1Fact f = getFactByID(c.getFactId());
 			if (f != null)
 				log.debug("fatto relativo alla card con id: " + c.getID() + "\nfact: " + f.toString());
 			else
@@ -273,8 +283,8 @@ public class AnkiDeckGeneric implements IAnkiDeckGeneric {
 	public void dump(String sep) {
 		log.info("ankideck nr elementi: " + this.factsByID.size());
 
-		for (Map.Entry<String, AnkiFact> e : this.factsByExpression.entrySet()) {
-			AnkiFact f = e.getValue();
+		for (Map.Entry<String, Anki1Fact> e : this.factsByExpression.entrySet()) {
+			Anki1Fact f = e.getValue();
 			log.info(f.toString());
 		}
 	}
@@ -299,7 +309,7 @@ public class AnkiDeckGeneric implements IAnkiDeckGeneric {
 	 * .String)
 	 */
 	@Override
-	public AnkiFact getFactByExp(String kanjiPar) {
+	public Anki1Fact getFactByExp(String kanjiPar) {
 		return factsByExpression.get(kanjiPar);
 	}
 
@@ -309,7 +319,7 @@ public class AnkiDeckGeneric implements IAnkiDeckGeneric {
 	 * @see com.enrico_viali.jacn.ankideck.generic.IAnkiDeck#getFactByID(long)
 	 */
 	@Override
-	public AnkiFact getFactByID(long nr) {
+	public Anki1Fact getFactByID(long nr) {
 		return factsByID.get(nr);
 	}
 
@@ -365,7 +375,7 @@ public class AnkiDeckGeneric implements IAnkiDeckGeneric {
 	}
 
 	@Override
-	public AnkiOneDeckDataModel getDm() {
+	public IAnkiDeckDataModel getDm() {
 		return dm;
 	}
 
@@ -377,13 +387,13 @@ public class AnkiDeckGeneric implements IAnkiDeckGeneric {
 		return factsByExpression.size();
 	}
 	
-	protected Map<String, AnkiFact> factsByExpression;
-	public Map<Long, AnkiFact> factsByID;
+	protected Map<String, Anki1Fact> factsByExpression;
+	public Map<Long, Anki1Fact> factsByID;
 	protected Map<String, FieldModel> fmodels;
 
 	Map<Long, AnkiCardModel> cardModelsByID;
-	Map<Long, AnkiCard> cardsByID;
-	public AnkiOneDeckDataModel dm;
+	Map<Long, IAnkiCard> cardsByID;
+	public IAnkiDeckDataModel dm;
 	protected boolean loaded;
 	protected boolean allowDuplicateExpressions;
 	protected String _expression;

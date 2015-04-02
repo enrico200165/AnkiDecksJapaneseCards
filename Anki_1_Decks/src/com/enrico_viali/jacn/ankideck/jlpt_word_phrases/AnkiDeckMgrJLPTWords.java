@@ -2,6 +2,7 @@ package com.enrico_viali.jacn.ankideck.jlpt_word_phrases;
 
 import org.apache.log4j.Logger;
 
+import com.enrico_viali.jacn.anki1deck.generic.Anki1Fact;
 import com.enrico_viali.jacn.ankideck.generic.*;
 import com.enrico_viali.jacn.ankideck.heisig.*;
 import com.enrico_viali.jacn.common.Cfg;
@@ -17,7 +18,7 @@ public class AnkiDeckMgrJLPTWords extends AnkiDeckGeneric {
 	}
 
 	@Override
-	public boolean addFact(AnkiFact e) {
+	public boolean addFact(Anki1Fact e) {
 		if (e instanceof AnkiFactJLPTWords) {
 			return super.addFact(e);
 		} else {
@@ -27,7 +28,7 @@ public class AnkiDeckMgrJLPTWords extends AnkiDeckGeneric {
 	}
 
 	@Override
-	public AnkiFact buildFact(long factID, String keyExpression) {
+	public Anki1Fact buildFact(long factID, String keyExpression) {
 		return new AnkiFactJLPTWords(factID, keyExpression, this);
 	}
 

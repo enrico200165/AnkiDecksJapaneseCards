@@ -2,6 +2,7 @@ package com.enrico_viali.jacn.ankideck.heisig;
 
 import org.apache.log4j.Logger;
 
+import com.enrico_viali.jacn.anki1deck.generic.Anki1Fact;
 import com.enrico_viali.jacn.ankideck.generic.*;
 import com.enrico_viali.jacn.common.*;
 import com.enrico_viali.libs.rdb_jdbc.*;
@@ -17,7 +18,7 @@ public class ADeckHeisigMgr extends AnkiDeckGeneric {
 	}
 
 	@Override
-	public AnkiFact buildFact(long factID, String fieldName) {
+	public Anki1Fact buildFact(long factID, String fieldName) {
 		return new AnkiFactHeisig(factID, fieldName, this);
 	}
 
@@ -34,7 +35,7 @@ public class ADeckHeisigMgr extends AnkiDeckGeneric {
 	}
 
 	@Override
-	public boolean addFact(AnkiFact o) {
+	public boolean addFact(Anki1Fact o) {
 		if (o == null) {
 			log.error("attempt to insert null element");
 			return false;
