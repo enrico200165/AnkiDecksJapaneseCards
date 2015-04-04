@@ -16,7 +16,13 @@ import com.enrico_viali.jacn.actions.JPCNCsvExport;
 import com.enrico_viali.jacn.actions.KanjdicBuildDB;
 import com.enrico_viali.jacn.actions.ScrachFillEdictDB;
 import com.enrico_viali.jacn.actions.UpdateDeckWithJPCNCsv;
+import com.enrico_viali.jacn.anki2deck.generic.Anki2DeckDataModel;
+import com.enrico_viali.jacn.anki2deck.generic.Anki2DeckGeneric;
+import com.enrico_viali.jacn.ankideck.generic.IAnkiDeckDataModel;
+import com.enrico_viali.jacn.ankideck.generic.IAnkiDeckGeneric;
 import com.enrico_viali.jacn.common.Cfg;
+import com.enrico_viali.libs.rdb_jdbc.IRDBManager;
+import com.enrico_viali.libs.rdb_jdbc.RDBManagerSQLite;
 import com.enrico_viali.utils.*;
 
 public class Main {
@@ -31,6 +37,21 @@ public class Main {
             System.err.println("errors detected in preliminary checks");
         }
                         
+        
+        IRDBManager dbm = new RDBManagerSQLite("V:\\data\\pers_data\\05_media_importanza\\anki_cfg\\00_dev\\collection.anki2", true);
+        dbm.getConnection();
+        
+        IAnkiDeckDataModel dm = new Anki2DeckDataModel(dbm);
+        
+        IAnkiDeckGeneric deck = new Anki2DeckGeneric("name" ,dm /*dmPar*/, "" /*expr*/ , false /*allowDuplicate*/);
+        deck.load();
+        deck.dump("\\t");
+        
+        
+        
+        log.error("quick and dirty test, remove this code");
+        System.exit(1);
+        
         drv = new TestDriver();
         // todo EV dat rimuovere
         // mgr.enrichEntries(true);

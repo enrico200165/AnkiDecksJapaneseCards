@@ -2,12 +2,12 @@ package com.enrico_viali.jacn.ankideck.kanji_enrico;
 
 import org.apache.log4j.Logger;
 
-import com.enrico_viali.jacn.anki1deck.generic.Anki1Fact;
+import com.enrico_viali.jacn.anki1deck.generic.Anki1DeckGeneric;
 import com.enrico_viali.jacn.ankideck.generic.*;
 import com.enrico_viali.jacn.ankideck.heisig.*;
 import com.enrico_viali.libs.rdb_jdbc.*;
 
-public class AnkiDeckMgrKanjiEnrico extends AnkiDeckGeneric {
+public class AnkiDeckMgrKanjiEnrico extends Anki1DeckGeneric {
 
 	public AnkiDeckMgrKanjiEnrico(String deckFname) throws Exception {
 		super(deckFname, new ADeckHesigDataModel(new RDBManagerSQLite(deckFname,true)),"Expression",/* allow dupl*/false);
@@ -25,7 +25,7 @@ public class AnkiDeckMgrKanjiEnrico extends AnkiDeckGeneric {
 	
 	
 	@Override
-	public boolean addFact(Anki1Fact e) {
+	public boolean addFact(Fact e) {
 		if (e instanceof AnkiFactEnricoKanji) {
 			return super.addFact(e);
 		} else {
@@ -35,7 +35,7 @@ public class AnkiDeckMgrKanjiEnrico extends AnkiDeckGeneric {
 	}
 
 	@Override
-	public Anki1Fact buildFact(long factID, String keyExpression) {
+	public Fact buildFact(long factID, String keyExpression) {
 		return new AnkiFactEnricoKanji(factID, keyExpression, this);
 	}
 		

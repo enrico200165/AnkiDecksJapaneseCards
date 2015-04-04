@@ -6,13 +6,12 @@ import java.util.Calendar;
 
 import org.apache.log4j.Logger;
 
-import com.enrico_viali.jacn.anki1deck.generic.Anki1Fact;
 import com.enrico_viali.jacn.common.*;
 import com.enrico_viali.utils.Utl;
 
 public class AnkiField {
 
-	public AnkiField(Anki1Fact containerFactPar) {
+	public AnkiField(Fact containerFactPar) {
 		super();
 		this.id = Utl.NOT_INITIALIZED_INT;
 		this.factID = Utl.NOT_INITIALIZED_INT;
@@ -234,7 +233,7 @@ public class AnkiField {
 		return false;
 	}
 
-	Anki1Fact containingFact;
+	Fact containingFact;
 	long id;
 	int factID;
 	int fieldModelID;

@@ -5,10 +5,9 @@ import java.sql.SQLException;
 
 import org.apache.log4j.Logger;
 
-import com.enrico_viali.jacn.anki1deck.generic.Anki1Fact;
 import com.enrico_viali.jacn.ankideck.generic.*;
 
-public class AnkiFactEnricoKanji extends Anki1Fact {
+public class AnkiFactEnricoKanji extends Fact {
 
 	public AnkiFactEnricoKanji(long factId, String exprPar, IAnkiDeckGeneric dm) {
 		super(factId, dm);

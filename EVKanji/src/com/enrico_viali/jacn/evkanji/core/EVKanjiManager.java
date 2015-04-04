@@ -8,7 +8,7 @@ import org.apache.log4j.Logger;
 
 import com.enrico_viali.gtranslate.*;
 import com.enrico_viali.html.HTMLEVUtils;
-import com.enrico_viali.jacn.ankideck.generic.AnkiFact;
+import com.enrico_viali.jacn.ankideck.generic.Fact;
 import com.enrico_viali.jacn.ankideck.heisig.ADeckHeisigMgr;
 import com.enrico_viali.jacn.ankideck.kanji_enrico.*;
 import com.enrico_viali.jacn.common.Cfg;
@@ -505,7 +505,7 @@ public class EVKanjiManager {
 			EVKanjiEntry toEnrich = (EVKanjiEntry) e;
 
 			AnkiFactEnricoKanji enricher = null;
-			AnkiFact a = ADeMgr.getFactByExp(toEnrich.getKanji());
+			Fact a = ADeMgr.getFactByExp(toEnrich.getKanji());
 			if (a == null) {
 				// log.error("non trovato kanji "+toEnrich.getKanji()+" con ID: "+toEnrich.getNumber());
 				// ADeMgr.dump(" - ");

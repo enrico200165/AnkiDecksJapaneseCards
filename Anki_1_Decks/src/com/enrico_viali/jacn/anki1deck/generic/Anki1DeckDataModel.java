@@ -6,7 +6,7 @@ import java.util.*;
 import org.apache.log4j.Logger;
 
 import com.enrico_viali.jacn.ankideck.generic.AnkiCardModel;
-import com.enrico_viali.jacn.ankideck.generic.FieldModel;
+import com.enrico_viali.jacn.ankideck.generic.Fact;
 import com.enrico_viali.jacn.ankideck.generic.IAnkiCard;
 import com.enrico_viali.jacn.ankideck.generic.IAnkiDeckDataModel;
 import com.enrico_viali.jacn.ankideck.generic.IAnkiDeckGeneric;
@@ -19,7 +19,8 @@ import com.enrico_viali.utils.Utl;
  * @author it068498
  * 
  */
-public class Anki1DeckDataModel implements IAnkiDeckDataModel   {
+public class Anki1DeckDataModel implements IAnkiDeckDataModel
+{
 
 	// protected per implementare il singleton
 	public Anki1DeckDataModel(IRDBManager dmdb) throws Exception {
@@ -248,12 +249,12 @@ public class Anki1DeckDataModel implements IAnkiDeckDataModel   {
 					Statement stFields = dmdb.getConnection().createStatement();
 					ResultSet fieldsRs = stFields
 							.executeQuery(fieldsQueryString);
-					Anki1Fact e = mgr.buildFact(factID, keyFieldName);
+					Fact e = mgr.buildFact(factID, keyFieldName);
 					if (e.fillFromRS(fieldsRs, factID)) {
 						log.debug("letto&added fatto: " + e.toString());
 						if (!mgr.addFact(e)) {
 							log.error("failed to insert fact in hashtable, factID: "
-									+ e.id
+									+ e.getID()
 									+ "query: "
 									+ fieldsQueryString
 									+ "\ndump: " + e.toString());
@@ -261,7 +262,7 @@ public class Anki1DeckDataModel implements IAnkiDeckDataModel   {
 						}
 					} else {
 						log.error("failed to fill fact from result set, factID: "
-								+ e.id + "\nquery: " + fieldsQueryString);
+								+ e.getID() + "\nquery: " + fieldsQueryString);
 						return false;
 					}
 				}
@@ -351,9 +352,6 @@ public class Anki1DeckDataModel implements IAnkiDeckDataModel   {
 		return true;
 	}
 
-	/* (non-Javadoc)
-     * @see com.enrico_viali.jacn.anki1deck.generic.IAnkiDeckDataModel#readCards(com.enrico_viali.jacn.ankideck.generic.IAnkiDeckGeneric)
-     */
 	@Override
     public boolean readCards(IAnkiDeckGeneric mgr) throws SQLException {
 		Statement stFacts;

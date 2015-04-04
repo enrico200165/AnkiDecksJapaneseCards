@@ -6,7 +6,8 @@ import java.util.ArrayList;
 import com.enrico_viali.jacn.common.FieldUpdate;
 
 public interface IAnkiDeckDataModel {
-
+    
+    
     public abstract boolean check();
 
     public abstract boolean copyField(String fNameSource, String fNameTarget,
