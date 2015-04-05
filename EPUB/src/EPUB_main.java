@@ -21,6 +21,14 @@ public class EPUB_main {
         suspendedTable = 0;
         previousTableID = "";
         previousTableFile = "";
+        clearRows();
+        scollamentoContatoriWarn = false;
+    }
+
+    void clearRows() {
+        tableRows = new Element[5];
+        for (int i = 0; i < tableRows.length; i++)
+            tableRows[i] = null;
     }
 
     public static ArrayList<File> listFilesInFolder(final File folder, boolean recurse) {
@@ -36,10 +44,25 @@ public class EPUB_main {
         return filesList;
     }
 
+    
+    int nrFromFName(String fname) {
+        int ret = -1;
+        String high = fname.substring(4,8);
+        String low = fname.substring(15,18);
+        
+        ret = 100*Integer.parseInt(high)+Integer.parseInt(low);
+        
+        return ret;
+    }
+    
     public void processFiles() {
         ArrayList<File> filesList = listFilesInFolder(new File("./data_in/rtk2/text/"), false);
 
+        int fNumber;
         for (File fileEntry : filesList) {
+            fNumber= nrFromFName(fileEntry.getName());
+            log.error(fNumber);
+            if (true) continue;
             // log.info(fileEntry.getAbsolutePath());
             if (fileEntry.getPath().matches(".*part.*_split_.*.html")) {
                 Document ePage = parseFile(fileEntry);
@@ -57,60 +80,59 @@ public class EPUB_main {
 
         Elements tablesInPage = page.select(tablesSel);
         for (Element outerTable : tablesInPage) {
-            log.info(filename + " tableCounter=" + tablesCounter + " selector: " + outerTable.cssSelector());
-            processInfoTable(outerTable, filename, 0);
+            if (!processInfoTable(outerTable, filename, 0))
+                log.info(filename + " tableCounter=" + tablesCounter + " selector: " + outerTable.cssSelector());
             if (errors > 999)
                 esco("troppi errori, esco");
         }
     }
 
     public boolean processInfoTable(Element table, String filename, int scanNr) {
-
+        final String rowsSelector = ".calibre8" + " " + ".calibre9";
         EntryMain mEntry = new EntryMain(); // entry to be added
+        int tableNr = Utils.tableNr(table.cssSelector());
+
+        switch (tableNr) {
+            case 201:
+                log.error("tabella 201 inclusa in TD di 200, gestire la 200 a mano");
+                mEntry.setComment("DUMMY DA SISTEMARE MANINA,  causa difetto ebook");
+                return true;
+            default: // fall off below
+        }
+        
+        
+        mEntry.setTableID(table.cssSelector());
+
+        if (previousTableID.equals(table.cssSelector())) {
+            log.warn("same table: " + previousTableID + " \nprevious: " + this.previousTableFile + " \nfile    : " + filename);
+            return true;
+        }
 
         // log.info(filename + " " + scanNr + "/" + this.nr +
         // ": ----------------------------------------" + "\n" + table.html());
 
-        String rowsSelector = ".calibre8" + " " + ".calibre9";
         Elements righe = table.select(rowsSelector);
 
-        int nrRighe = righe.size();
-        if (nrRighe <= 0) {
+        if (righe.size() <= 0) {
             log.error("zero righe, esco");
             System.exit(1);
             return false;
         }
 
-        // log.info("fine tabella sospesa, file: " + filename + " selector: " +
-        // table.cssSelector() + " nrTable:" + this.tablesCounter);
-        if (nrRighe >= 1) {
-            riga1 = righe.get(0);
-            if (nrRighe >= 2)
-                riga2 = righe.get(1);
-            if (nrRighe >= 3)
-                riga3 = righe.get(2);
-        }        
-       
-        
-        if (previousTableID.equals(table.cssSelector())) {
-            log.warn("same table: " + previousTableID+" \nprevious: "+this.previousTableFile+ " \nfile    : "+filename);
-            log.debug("");
-        } else {
-            // salva
-            previousTableID = table.cssSelector();
+        for (int i = 0; i < righe.size(); i++) {
+            this.tableRows[i] = righe.get(i);
         }
 
         // --- --- ---- elaboriamo righe --- ---- ---- ----
 
-        if (!mEntry.processRiga1(table, filename, scanNr, this.tablesCounter)) {
+        if (!mEntry.processRiga1(tableRows[0], filename, table.cssSelector(), tableNr, scanNr, this.tablesCounter)) {
             log.error(filename + " " + scanNr + "/" + this.tablesCounter + ": --------------------------------\n" + table.html().substring(0, 80));
         }
-
-        if (!mEntry.processRiga2(table, filename, scanNr, this.tablesCounter)) {
+        if (!mEntry.processRiga2(tableRows[1], filename, table.cssSelector(), tableNr, scanNr, this.tablesCounter)) {
             log.error(filename + " " + scanNr + "/" + this.tablesCounter + ": --------------------------------\n" + table.html().substring(0, 80));
         }
-
-        if (riga3 != null && !mEntry.processRiga2(table, filename, scanNr, this.tablesCounter)) {
+        if (tableRows[2] != null
+                && !mEntry.processRiga3(tableRows[2], filename, table.cssSelector(), tableNr, scanNr, this.tablesCounter)) {
             log.error(filename + " " + scanNr + "/" + this.tablesCounter + ": --------------------------------\n" + table.html().substring(0, 80));
         }
 
@@ -127,14 +149,15 @@ public class EPUB_main {
         }
 
         if (mEntry.getRFrame() != this.tablesCounter) {
-            log.warn("file: " + filename + " scollamento contatory: rFrame=" + mEntry.getRFrame() + " tablesCounter=" + this.tablesCounter + " selector: " + table.cssSelector());
+            if (!scollamentoContatoriWarn) {
+                log.warn("file: " + filename + " scollamento contatory: rFrame=" + mEntry.getRFrame() + " tablesCounter=" + this.tablesCounter + " selector: " + table.cssSelector());
+                scollamentoContatoriWarn = true;
+            }
         }
 
-        /*
-         * if (!processRiga1(es, filename, scanNr)) { // log.error(filename +
-         * " " + scanNr + "/" + this.nr + ": --------------------------------\n"
-         * + es.html()); }
-         */
+        // log.info(mEntry.toString());
+
+        previousTableID = table.cssSelector();
         this.previousTableFile = filename;
         return true;
     }
@@ -178,23 +201,21 @@ public class EPUB_main {
 
     // elementi di lavoro, dovrebbero essere variabili locali ma per gestire le
     // tabelle spezzate su due file devo mantener i valori
-    Element                                riga1 = null;
-    Element                                riga2 = null;
-    Element                                riga3 = null;
+    Element[]                              tableRows;
 
-    int                                    suspendedTable;                           // 0=no,
-                                                                                      // 1
-                                                                                      // yes,
-                                                                                      // non
-                                                                                      // gestiamo
-                                                                                      // tabelle
-                                                                                      // in
-                                                                                      // cui
-                                                                                      // è
-                                                                                      // sospesa
-                                                                                      // la
-                                                                                      // terza
-                                                                                      // riga
+    int                                    suspendedTable;                         // 0=no,
+                                                                                    // 1
+                                                                                    // yes,
+                                                                                    // non
+                                                                                    // gestiamo
+                                                                                    // tabelle
+                                                                                    // in
+                                                                                    // cui
+                                                                                    // è
+                                                                                    // sospesa
+                                                                                    // la
+                                                                                    // terza
+                                                                                    // riga
 
     String                                 previousTableID;
     String                                 previousTableFile;
@@ -202,6 +223,7 @@ public class EPUB_main {
 
     int                                    tablesCounter;
     int                                    errors;
+    boolean                                scollamentoContatoriWarn;
 
-    private static org.apache.log4j.Logger log   = Logger.getLogger(EPUB_main.class);
+    private static org.apache.log4j.Logger log = Logger.getLogger(EPUB_main.class);
 }
