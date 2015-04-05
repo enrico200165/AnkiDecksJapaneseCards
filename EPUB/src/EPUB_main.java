@@ -12,80 +12,99 @@ import org.jsoup.select.Elements;
 public class EPUB_main {
 
     EPUB_main() {
-        this.tableCounter = -1;  // prima tabella è di esempio
+        reset();
     }
 
-    public static ArrayList<File> listFilesForFolder(final File folder, boolean recurse) {
+    void reset() {
+        this.tablesCounter = 0; // prima tabella è di esempio
+        entriesMain = new ArrayList<EntryMain>();
+    }
+
+    public static ArrayList<File> listFilesInFolder(final File folder, boolean recurse) {
         ArrayList<File> filesList = new ArrayList<File>();
         for (final File fileEntry : folder.listFiles()) {
             filesList.add(fileEntry);
             if (recurse && fileEntry.isDirectory()) {
-                listFilesForFolder(fileEntry, recurse);
+                listFilesInFolder(fileEntry, recurse);
             } else {
-                // System.out.println(fileEntry.getName());
                 // System.out.println(fileEntry.getAbsolutePath());
             }
         }
         return filesList;
     }
 
-    public void process() {
-        ArrayList<File> filesList = listFilesForFolder(new File("./data_in/rtk2/text/"), false);
+    public void processFiles() {
+        ArrayList<File> filesList = listFilesInFolder(new File("./data_in/rtk2/text/"), false);
 
         for (File fileEntry : filesList) {
             // log.info(fileEntry.getAbsolutePath());
             if (fileEntry.getPath().matches(".*part.*_split_.*.html")) {
                 Document ePage = parseFile(fileEntry);
-                parsePart1(ePage, fileEntry.getPath());
+                parsePage(ePage, fileEntry.getPath());
             }
             fileEntry = null;
-            // System.gc();
+            System.gc();
         }
 
     }
 
-    void parsePart1(org.jsoup.nodes.Document page, String filename) {
+    void parsePage(Document page, String filename) {
         String tablesSel = "table";
 
-        Elements tables = page.select(tablesSel);
-        for (Element outerTable : tables) {
-            log.info(filename + " tableCounter=" + tableCounter+" selector: "+ outerTable.cssSelector());
-            /*
-             * String hclass = ".rk2-no-hint"; String tableId = "#table-";
-             * String selector = hclass + "" + tableId + i + " " + ".calibre8" +
-             * " " + ".calibre9";
-             */
-            processEntry(outerTable, filename, 0);
+        Elements tablesInPage = page.select(tablesSel);
+        for (Element outerTable : tablesInPage) {
+            log.info(filename + " tableCounter=" + tablesCounter + " selector: " + outerTable.cssSelector());
+            processInfoTable(outerTable, filename, 0);
             if (errors > 999)
                 esco("troppi errori, esco");
         }
-        // System.gc();
-
     }
 
-    public boolean processEntry(Element table, String filename, int scanNr) {
+    public boolean processInfoTable(Element table, String filename, int scanNr) {
+
+        EntryMain mEntry = new EntryMain(); // entry to be added
+
         Element riga1 = null;
         Element riga2 = null;
         Element riga3 = null;
 
-        this.tableCounter++;
         // log.info(filename + " " + scanNr + "/" + this.nr +
         // ": ----------------------------------------" + "\n" + table.html());
 
         String rowsSelector = ".calibre8" + " " + ".calibre9";
-        Elements righe = table.select(rowsSelector);
 
+        Elements righe = table.select(rowsSelector);
         int nrRighr = righe.size();
         if (nrRighr <= 0) {
             log.error("zero righe");
             return false;
         }
         riga1 = righe.get(0);
+
         if (nrRighr >= 2) {
             riga2 = righe.get(1);
+            if (!mEntry.processRiga2(table, filename, scanNr, this.tablesCounter)) {
+                log.error(filename + " " + scanNr + "/" + this.tablesCounter + ": --------------------------------\n" + table.html().substring(0, 80));
+            }
         }
         if (nrRighr >= 3) {
             riga3 = righe.get(2);
+        }
+
+        if (tablesCounter == 0 && mEntry.getRFrame() == 762) {
+            log.warn("salto tabella di esempio");
+            return true;
+        }
+
+        if (mEntry.isComplete()) {
+            this.tablesCounter++;
+            entriesMain.add(mEntry);
+        } else {
+            log.warn("entry not complete");
+        }
+
+        if (mEntry.getRFrame() != this.tablesCounter) {
+            log.warn("scollamento contatory: rFrame=" + mEntry.getRFrame() + " tablesCounter=" + this.tablesCounter);
         }
 
         /*
@@ -94,9 +113,6 @@ public class EPUB_main {
          * + es.html()); }
          */
 
-        if (!processRiga2(table, filename, scanNr)) {
-            log.error(filename + " " + scanNr + "/" + this.tableCounter + ": --------------------------------\n" + table.html().substring(0,80));
-        }
         return true;
     }
 
@@ -153,7 +169,7 @@ public class EPUB_main {
                 if (link != null) {
                     // log.info(nr + " link: " + link.text());
                 } else {
-                    log.warn("no link frame: " + tableCounter);
+                    log.warn("no link frame: " + tablesCounter);
                 }
             }
             { // kanji frame number
@@ -167,30 +183,9 @@ public class EPUB_main {
         return true;
     }
 
-    
-    
-    boolean processRiga2(Element riga2, String filename, int scanNr) {
-
-        { // ------ frame nr ----
-            ArrayList<String> sels = new ArrayList<String>(Arrays.asList(".x2-r-number"
-                    // ,".generated-style-2-override2"
-                    ));
-            Element rktk2Frame = find(riga2, sels);
-            if (rktk2Frame != null) {
-                log.info(tableCounter + " rktk2Frame: " + rktk2Frame.text());
-            } else {
-                errors++;
-                log.error(filename + " nr=" + scanNr + " rktk2 Frame not found\nhtml TRONCATO:\n" + riga2.html().substring(0,80));
-                bigProblemHook();
-                return false;
-            }
-        }
-        return true;
-    }
-
     public static void main(String[] argc) {
         EPUB_main e = new EPUB_main();
-        e.process();
+        e.processFiles();
 
     }
 
@@ -208,7 +203,7 @@ public class EPUB_main {
         return doc;
     }
 
-    Element find(Element e, ArrayList<String> selectors) {
+    public static Element find(Element e, ArrayList<String> selectors) {
         Element ret = null;
         Elements els;
         for (String sel : selectors) {
@@ -220,7 +215,7 @@ public class EPUB_main {
         return ret;
     }
 
-    void bigProblemHook() {
+    static void bigProblemHook() {
         log.error("fix this");
     }
 
@@ -229,8 +224,10 @@ public class EPUB_main {
         System.exit(1);
     }
 
-    int                                    tableCounter; // prima tavola è di esempio e duplicata
-    int                                    errors = 0;
+    ArrayList<EntryMain>                   entriesMain;
 
-    private static org.apache.log4j.Logger log    = Logger.getLogger(EPUB_main.class);
+    int                                    tablesCounter;
+    int                                    errors;
+
+    private static org.apache.log4j.Logger log = Logger.getLogger(EPUB_main.class);
 }
