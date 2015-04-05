@@ -18,6 +18,9 @@ public class EPUB_main {
     void reset() {
         this.tablesCounter = 0; // prima tabella è di esempio
         entriesMain = new ArrayList<EntryMain>();
+        suspendedTable = 0;
+        previousTableID = "";
+        previousTableFile = "";
     }
 
     public static ArrayList<File> listFilesInFolder(final File folder, boolean recurse) {
@@ -41,6 +44,7 @@ public class EPUB_main {
             if (fileEntry.getPath().matches(".*part.*_split_.*.html")) {
                 Document ePage = parseFile(fileEntry);
                 parsePage(ePage, fileEntry.getPath());
+                previousTableFile = fileEntry.getPath();
             }
             fileEntry = null;
             System.gc();
@@ -64,31 +68,50 @@ public class EPUB_main {
 
         EntryMain mEntry = new EntryMain(); // entry to be added
 
-        Element riga1 = null;
-        Element riga2 = null;
-        Element riga3 = null;
-
         // log.info(filename + " " + scanNr + "/" + this.nr +
         // ": ----------------------------------------" + "\n" + table.html());
 
         String rowsSelector = ".calibre8" + " " + ".calibre9";
-
         Elements righe = table.select(rowsSelector);
-        int nrRighr = righe.size();
-        if (nrRighr <= 0) {
-            log.error("zero righe");
+
+        int nrRighe = righe.size();
+        if (nrRighe <= 0) {
+            log.error("zero righe, esco");
+            System.exit(1);
             return false;
         }
-        riga1 = righe.get(0);
 
-        if (nrRighr >= 2) {
-            riga2 = righe.get(1);
-            if (!mEntry.processRiga2(table, filename, scanNr, this.tablesCounter)) {
-                log.error(filename + " " + scanNr + "/" + this.tablesCounter + ": --------------------------------\n" + table.html().substring(0, 80));
-            }
+        // log.info("fine tabella sospesa, file: " + filename + " selector: " +
+        // table.cssSelector() + " nrTable:" + this.tablesCounter);
+        if (nrRighe >= 1) {
+            riga1 = righe.get(0);
+            if (nrRighe >= 2)
+                riga2 = righe.get(1);
+            if (nrRighe >= 3)
+                riga3 = righe.get(2);
+        }        
+       
+        
+        if (previousTableID.equals(table.cssSelector())) {
+            log.warn("same table: " + previousTableID+" \nprevious: "+this.previousTableFile+ " \nfile    : "+filename);
+            log.debug("");
+        } else {
+            // salva
+            previousTableID = table.cssSelector();
         }
-        if (nrRighr >= 3) {
-            riga3 = righe.get(2);
+
+        // --- --- ---- elaboriamo righe --- ---- ---- ----
+
+        if (!mEntry.processRiga1(table, filename, scanNr, this.tablesCounter)) {
+            log.error(filename + " " + scanNr + "/" + this.tablesCounter + ": --------------------------------\n" + table.html().substring(0, 80));
+        }
+
+        if (!mEntry.processRiga2(table, filename, scanNr, this.tablesCounter)) {
+            log.error(filename + " " + scanNr + "/" + this.tablesCounter + ": --------------------------------\n" + table.html().substring(0, 80));
+        }
+
+        if (riga3 != null && !mEntry.processRiga2(table, filename, scanNr, this.tablesCounter)) {
+            log.error(filename + " " + scanNr + "/" + this.tablesCounter + ": --------------------------------\n" + table.html().substring(0, 80));
         }
 
         if (tablesCounter == 0 && mEntry.getRFrame() == 762) {
@@ -104,7 +127,7 @@ public class EPUB_main {
         }
 
         if (mEntry.getRFrame() != this.tablesCounter) {
-            log.warn("scollamento contatory: rFrame=" + mEntry.getRFrame() + " tablesCounter=" + this.tablesCounter);
+            log.warn("file: " + filename + " scollamento contatory: rFrame=" + mEntry.getRFrame() + " tablesCounter=" + this.tablesCounter + " selector: " + table.cssSelector());
         }
 
         /*
@@ -112,7 +135,7 @@ public class EPUB_main {
          * " " + scanNr + "/" + this.nr + ": --------------------------------\n"
          * + es.html()); }
          */
-
+        this.previousTableFile = filename;
         return true;
     }
 
@@ -123,65 +146,6 @@ public class EPUB_main {
      *            consistere di 2 o 3 righe
      * 
      */
-
-    boolean processRiga1(Elements es, String filename, int scanNr) {
-        {
-            Element riga1 = es.get(0); //
-            // log.info(riga1.toString());
-
-            { // ------ kanji ----
-                ArrayList<String> sels = new ArrayList<String>(Arrays.asList(".x2-frame-kanji > span"));
-                Element kanji = find(riga1, sels);
-                if (kanji != null) {
-                    // log.info(nr + " signal primitive: " + kanji.text());
-                } else {
-                    log.error("");
-                    errors++;
-                    return false;
-                }
-            }
-            { // signal primitive is missing I THINK
-                ArrayList<String> sels = new ArrayList<String>(Arrays.asList(".generated-style-override1", ".generated-style-2-override28"));
-                Element signPrim = find(riga1, sels);
-                if (signPrim != null) {
-                    // log.info(nr + " signal primitive: " + signPrim.text());
-                } else {
-                    errors++;
-                    log.error("");
-                    return false;
-                }
-            }
-            { // On reading
-                ArrayList<String> sels = new ArrayList<String>(Arrays.asList(".x2-example-1-kanji span.no-style-override50", ".generated-style-override2"));
-                Element OnE = find(riga1, sels);
-                if (OnE != null) {
-                    // log.info(nr + " signal primitive: " + OnE.text());
-                } else {
-                    errors++;
-                    log.error("");
-                    return false;
-                }
-            }
-            { // link
-
-                ArrayList<String> sels = new ArrayList<String>(Arrays.asList(".generated-style-override3", ".generated-style-2-override18"));
-                Element link = find(riga1, sels);
-                if (link != null) {
-                    // log.info(nr + " link: " + link.text());
-                } else {
-                    log.warn("no link frame: " + tablesCounter);
-                }
-            }
-            { // kanji frame number
-                ArrayList<String> sels = new ArrayList<String>(Arrays.asList(".x2-vol-1-nr", ".generated-style-2-override1",
-                        ".generated-style-2-override8",
-                        ".generated-style-2-override28"));
-                Element link1 = find(riga1, sels);
-                // log.info(nr + " kanji frame: " + link1.text());
-            }
-        }
-        return true;
-    }
 
     public static void main(String[] argc) {
         EPUB_main e = new EPUB_main();
@@ -203,18 +167,6 @@ public class EPUB_main {
         return doc;
     }
 
-    public static Element find(Element e, ArrayList<String> selectors) {
-        Element ret = null;
-        Elements els;
-        for (String sel : selectors) {
-            els = e.select(sel);
-            if (els.size() > 0) {
-                return els.get(0);
-            }
-        }
-        return ret;
-    }
-
     static void bigProblemHook() {
         log.error("fix this");
     }
@@ -224,10 +176,32 @@ public class EPUB_main {
         System.exit(1);
     }
 
+    // elementi di lavoro, dovrebbero essere variabili locali ma per gestire le
+    // tabelle spezzate su due file devo mantener i valori
+    Element                                riga1 = null;
+    Element                                riga2 = null;
+    Element                                riga3 = null;
+
+    int                                    suspendedTable;                           // 0=no,
+                                                                                      // 1
+                                                                                      // yes,
+                                                                                      // non
+                                                                                      // gestiamo
+                                                                                      // tabelle
+                                                                                      // in
+                                                                                      // cui
+                                                                                      // è
+                                                                                      // sospesa
+                                                                                      // la
+                                                                                      // terza
+                                                                                      // riga
+
+    String                                 previousTableID;
+    String                                 previousTableFile;
     ArrayList<EntryMain>                   entriesMain;
 
     int                                    tablesCounter;
     int                                    errors;
 
-    private static org.apache.log4j.Logger log = Logger.getLogger(EPUB_main.class);
+    private static org.apache.log4j.Logger log   = Logger.getLogger(EPUB_main.class);
 }

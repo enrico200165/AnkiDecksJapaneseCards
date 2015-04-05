@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="lib" path="V:/data/pers_dev/00_libs/3rd_party_libs/java/log4j-1.2.15.jar"/>
 	<classpathentry kind="lib" path="lib/jsoup-1.8.1.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="jar:platform:/resource/EPUB/lib/jsoup-1.8.1-javadoc.jar!/"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="lib/log4j-1.2.15.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
