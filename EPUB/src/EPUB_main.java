@@ -69,7 +69,7 @@ public class EPUB_main {
             if (fNumber == 201) {
             } else {
                 Document ePage = parseFile(fileEntry);
-                parsePage(fNumber, ePage, fileEntry.getPath());
+                parsePage(fNumber, ePage, fileEntry.getName());
                 previousTableFile = fileEntry.getPath();
             }
             fileEntry = null;
@@ -84,27 +84,22 @@ public class EPUB_main {
         Elements tablesInPage = page.select(tablesSel);
         for (Element outerTable : tablesInPage) {
             tablesScanned++;
-            if (fileNr < 300) {
+            if (fileNr < 99999) {
                 if (processInfoTable(fileNr, outerTable, filename, tablesScanned)) {
                     tablesScannedOK++;
                 } else {
                     log.error("error in table scan, " + filename + " tableCounter=" + tablesCounter + " selector: " + outerTable.cssSelector());
                 }
             } else {
-                log.error("algoritmo da sviluppare per fileNr: "+fileNr+ " tables scanned: "+tablesScanned);
+                log.error("algoritmo da sviluppare per fileNr: " + fileNr + " tables scanned: " + tablesScanned);
             }
             if (errors > 999)
                 Utils.esco("troppi errori, esco");
         }
     }
 
-    public boolean processInfoTable(int fileNr, Element table, String filename, int scanNr) {
-        final String rowsSelector = ".calibre8" + " " + ".calibre9";
-        EntryMain mEntry = new EntryMain(); // entry to be added
-        int tableNr = Utils.tableNr(table.cssSelector());
-
+    boolean tableToSkip(int tableNr, int fileNr) {
         boolean skip = false;
-        // --- special cases
         skip |= (tableNr == 185 && (fileNr == 102 || fileNr == 103));
         skip |= (tableNr == 201 && fileNr == 103);
         skip |= (tableNr == 317 && fileNr == 103);
@@ -113,7 +108,23 @@ public class EPUB_main {
         skip |= (tableNr == 41 && fileNr == 200);
         skip |= (tableNr == 218 && (fileNr == 202 || fileNr == 203));
         skip |= (tableNr == 9 && fileNr == 300);
-        if (skip) {
+        skip |= (tableNr == 112 && (fileNr == 300 || fileNr == 301));
+
+        skip |= (tableNr == 539 && (fileNr == 304 || fileNr == 305)); // non ha la cella vuota a fine seconda riga, è splittata
+        skip |= (tableNr == 123 && (fileNr == 401 || fileNr == 401)); 
+        skip |= (tableNr == 75 && (fileNr == 500 || fileNr == 501)); 
+        skip |= (tableNr == 88 && (fileNr == 600 || fileNr == 601)); 
+        skip |= (tableNr == 256 && (fileNr == 602 || fileNr == 603)); 
+        
+        return skip;
+    }
+
+    public boolean processInfoTable(int fileNr, Element table, String filename, int scanNr) {
+        final String rowsSelector = ".calibre8" + " " + ".calibre9";
+        int tableNr = Utils.tableNr(table.cssSelector());
+
+        if (tableToSkip(tableNr, fileNr)) {
+            EntryMain mEntry = new EntryMain(); // entry to be added
             String msg = filename + " tableID=" + table.cssSelector() + " previousFrame=" + this.previousFrame + " gestire a mano";
             log.error(msg);
             mEntry.setKanji("狭*");
@@ -123,7 +134,7 @@ public class EPUB_main {
             return true;
         }
 
-        mEntry.setTableID(table.cssSelector());
+        // mEntry.setTableID(table.cssSelector());
 
         if (previousTableID.equals(table.cssSelector())) {
             log.warn("same table: " + previousTableID + " \nprevious: " + this.previousTableFile + " \nfile    : " + filename);
@@ -135,28 +146,44 @@ public class EPUB_main {
 
         Elements righe = table.select(rowsSelector);
 
-        if (righe.size() <= 0) {
-            log.error("zero righe, esco");
+        if (righe.size() <= 1) {
+            log.error("zero o una riga, esco");
             System.exit(1);
             return false;
         }
 
+        int nrNonEmptyRows = 0;
         for (int i = 0; i < righe.size(); i++) {
-            this.tableRows[i] = righe.get(i);
+            if (righe.get(i).text().trim().length() > 0) {
+                this.tableRows[i] = righe.get(i);
+                nrNonEmptyRows++;
+            }
+        }
+
+        EntryMain mEntry = null;
+        if (nrNonEmptyRows <= 1) {
+            log.error("");
+            return true;
+        }
+        if (nrNonEmptyRows == 2) {
+            mEntry = processStandardEntry(table, tableRows[0], tableRows[1], tableRows[2], filename, tableNr, scanNr, nrNonEmptyRows);
+        }
+        if (nrNonEmptyRows == 3) {
+            boolean terzaCommento = (nrNonEmptyRows == 2 && tableRows[2].select("td").size() <= 3);
+            if (terzaCommento) {
+                log.info("comment: " + tableRows[2].text());
+                mEntry = processStandardEntry(table, tableRows[0], tableRows[1], tableRows[2], filename, tableNr, scanNr, nrNonEmptyRows);
+            } else {
+                log.error("");
+                return true;
+            }
+        }
+        if (nrNonEmptyRows == 4) {
+            log.error("");
+            return true;
         }
 
         // --- --- ---- elaboriamo righe --- ---- ---- ----
-
-        if (!mEntry.processRiga1Posizional(fileNr, tableRows[0], filename, table.cssSelector(), tableNr, scanNr, this.tablesCounter)) {
-            log.error(filename + " " + scanNr + "/" + this.tablesCounter + ": --------------------------------\n" + table.html().substring(0, 80));
-        }
-        if (!mEntry.processRiga2Positional(tableRows[1], filename, table.cssSelector(), tableNr, scanNr, this.tablesCounter)) {
-            log.error(filename + " " + scanNr + "/" + this.tablesCounter + ": --------------------------------\n" + table.html().substring(0, 80));
-        }
-        if (tableRows[2] != null
-                && !mEntry.processRiga3(tableRows[2], filename, table.cssSelector(), tableNr, scanNr, this.tablesCounter)) {
-            log.error(filename + " " + scanNr + "/" + this.tablesCounter + ": --------------------------------\n" + table.html().substring(0, 80));
-        }
 
         if (tablesCounter == 0 && mEntry.getRFrame() == 762) {
             log.warn("salto tabella di esempio");
@@ -189,6 +216,22 @@ public class EPUB_main {
         previousTableID = table.cssSelector();
         this.previousTableFile = filename;
         return true;
+    }
+
+    EntryMain processStandardEntry(Element table, Element riga1, Element riga2, Element riga3, String filename, int tableNr, int scanNr, int previousFrame) {
+        EntryMain mEntry = new EntryMain(); // entry to be added
+        boolean ret = true;
+        String tableID = table.cssSelector();
+        int fileNr = nrFromFName(filename);
+
+        ret = ret && mEntry.processRiga1Posizional(fileNr, tableRows[0], filename, table.cssSelector(), tableNr, scanNr, this.tablesCounter);
+        ret = ret && mEntry.processRiga2Positional(tableRows[1], filename, table.cssSelector(), tableNr, scanNr, this.tablesCounter);
+        if (tableRows[2] != null)
+            ret = ret && mEntry.processRiga3(tableRows[2], filename, table.cssSelector(), tableNr, scanNr, this.tablesCounter);
+        if (ret)
+            return mEntry;
+        else
+            return null;
     }
 
     /**
