@@ -23,6 +23,7 @@ public class EPUB_main {
         previousTableFile = "";
         clearRows();
         scollamentoContatoriWarn = false;
+        previousFrame = 0;
     }
 
     void clearRows() {
@@ -44,29 +45,31 @@ public class EPUB_main {
         return filesList;
     }
 
-    
     int nrFromFName(String fname) {
         int ret = -1;
-        String high = fname.substring(4,8);
-        String low = fname.substring(15,18);
-        
-        ret = 100*Integer.parseInt(high)+Integer.parseInt(low);
-        
+        String high = fname.substring(4, 8);
+        String low = fname.substring(15, 18);
+
+        ret = 100 * Integer.parseInt(high) + Integer.parseInt(low);
+
         return ret;
     }
-    
+
     public void processFiles() {
         ArrayList<File> filesList = listFilesInFolder(new File("./data_in/rtk2/text/"), false);
 
         int fNumber;
+        tablesScanned = 0;
+        tablesScannedOK = 0;
+
         for (File fileEntry : filesList) {
-            fNumber= nrFromFName(fileEntry.getName());
-            log.error(fNumber);
-            if (true) continue;
+            fNumber = nrFromFName(fileEntry.getName());
+            // log.error(fNumber);
             // log.info(fileEntry.getAbsolutePath());
-            if (fileEntry.getPath().matches(".*part.*_split_.*.html")) {
+            if (fNumber == 201) {
+            } else {
                 Document ePage = parseFile(fileEntry);
-                parsePage(ePage, fileEntry.getPath());
+                parsePage(fNumber, ePage, fileEntry.getPath());
                 previousTableFile = fileEntry.getPath();
             }
             fileEntry = null;
@@ -75,32 +78,51 @@ public class EPUB_main {
 
     }
 
-    void parsePage(Document page, String filename) {
+    void parsePage(int fileNr, Document page, String filename) {
         String tablesSel = "table";
 
         Elements tablesInPage = page.select(tablesSel);
         for (Element outerTable : tablesInPage) {
-            if (!processInfoTable(outerTable, filename, 0))
-                log.info(filename + " tableCounter=" + tablesCounter + " selector: " + outerTable.cssSelector());
+            tablesScanned++;
+            if (fileNr < 300) {
+                if (processInfoTable(fileNr, outerTable, filename, tablesScanned)) {
+                    tablesScannedOK++;
+                } else {
+                    log.error("error in table scan, " + filename + " tableCounter=" + tablesCounter + " selector: " + outerTable.cssSelector());
+                }
+            } else {
+                log.error("algoritmo da sviluppare per fileNr: "+fileNr+ " tables scanned: "+tablesScanned);
+            }
             if (errors > 999)
-                esco("troppi errori, esco");
+                Utils.esco("troppi errori, esco");
         }
     }
 
-    public boolean processInfoTable(Element table, String filename, int scanNr) {
+    public boolean processInfoTable(int fileNr, Element table, String filename, int scanNr) {
         final String rowsSelector = ".calibre8" + " " + ".calibre9";
         EntryMain mEntry = new EntryMain(); // entry to be added
         int tableNr = Utils.tableNr(table.cssSelector());
 
-        switch (tableNr) {
-            case 201:
-                log.error("tabella 201 inclusa in TD di 200, gestire la 200 a mano");
-                mEntry.setComment("DUMMY DA SISTEMARE MANINA,  causa difetto ebook");
-                return true;
-            default: // fall off below
+        boolean skip = false;
+        // --- special cases
+        skip |= (tableNr == 185 && (fileNr == 102 || fileNr == 103));
+        skip |= (tableNr == 201 && fileNr == 103);
+        skip |= (tableNr == 317 && fileNr == 103);
+        skip |= (tableNr == 317 && fileNr == 104);
+        skip |= (tableNr == 446 && (fileNr == 104 || fileNr == 105));
+        skip |= (tableNr == 41 && fileNr == 200);
+        skip |= (tableNr == 218 && (fileNr == 202 || fileNr == 203));
+        skip |= (tableNr == 9 && fileNr == 300);
+        if (skip) {
+            String msg = filename + " tableID=" + table.cssSelector() + " previousFrame=" + this.previousFrame + " gestire a mano";
+            log.error(msg);
+            mEntry.setKanji("狭*");
+            mEntry.setComment(msg);
+            entriesMain.add(mEntry);
+            log.warn("forse dovrei forzare continuità frame");
+            return true;
         }
-        
-        
+
         mEntry.setTableID(table.cssSelector());
 
         if (previousTableID.equals(table.cssSelector())) {
@@ -125,10 +147,10 @@ public class EPUB_main {
 
         // --- --- ---- elaboriamo righe --- ---- ---- ----
 
-        if (!mEntry.processRiga1(tableRows[0], filename, table.cssSelector(), tableNr, scanNr, this.tablesCounter)) {
+        if (!mEntry.processRiga1Posizional(fileNr, tableRows[0], filename, table.cssSelector(), tableNr, scanNr, this.tablesCounter)) {
             log.error(filename + " " + scanNr + "/" + this.tablesCounter + ": --------------------------------\n" + table.html().substring(0, 80));
         }
-        if (!mEntry.processRiga2(tableRows[1], filename, table.cssSelector(), tableNr, scanNr, this.tablesCounter)) {
+        if (!mEntry.processRiga2Positional(tableRows[1], filename, table.cssSelector(), tableNr, scanNr, this.tablesCounter)) {
             log.error(filename + " " + scanNr + "/" + this.tablesCounter + ": --------------------------------\n" + table.html().substring(0, 80));
         }
         if (tableRows[2] != null
@@ -141,9 +163,16 @@ public class EPUB_main {
             return true;
         }
 
-        if (mEntry.isComplete()) {
+        if (mEntry.getRFrame() != previousFrame + 1) {
+            log.error("discontinuità rFrames, \nprevious=" + previousFrame + " \ncurrent=  " + mEntry.getRFrame());
+            // Utils.esco("discontinuità rFrames");
+        }
+
+        if (mEntry.isValid()) {
             this.tablesCounter++;
             entriesMain.add(mEntry);
+            previousFrame = mEntry.getRFrame();
+            log.info("lastGoodFrame: " + previousFrame);
         } else {
             log.warn("entry not complete");
         }
@@ -184,7 +213,7 @@ public class EPUB_main {
             // TODO Auto-generated catch block
             e.printStackTrace();
             doc = null;
-            esco("errore di parsin");
+            Utils.esco("errore di parsin");
 
         }
         return doc;
@@ -192,11 +221,6 @@ public class EPUB_main {
 
     static void bigProblemHook() {
         log.error("fix this");
-    }
-
-    void esco(String msg) {
-        log.error("esco: " + msg);
-        System.exit(1);
     }
 
     // elementi di lavoro, dovrebbero essere variabili locali ma per gestire le
@@ -220,6 +244,9 @@ public class EPUB_main {
     String                                 previousTableID;
     String                                 previousTableFile;
     ArrayList<EntryMain>                   entriesMain;
+    int                                    tablesScanned;
+    int                                    tablesScannedOK;
+    int                                    previousFrame;
 
     int                                    tablesCounter;
     int                                    errors;

@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 
+import org.apache.log4j.Logger;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
@@ -23,5 +24,10 @@ public class Utils {
         return ret;
     }
 
-    
+    static void esco(String msg) {
+        log.error("esco: " + msg);
+        System.exit(1);
+    }
+    private static org.apache.log4j.Logger log = Logger.getLogger(Utils.class);
+
 }
