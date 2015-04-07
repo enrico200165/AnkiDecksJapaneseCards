@@ -28,6 +28,19 @@ public class Utils {
         log.error("esco: " + msg);
         System.exit(1);
     }
+    
+    
+    static int nrFromFName(String fname) {
+        int ret = -1;
+        String high = fname.substring(4, 8);
+        String low = fname.substring(15, 18);
+
+        ret = 100 * Integer.parseInt(high) + Integer.parseInt(low);
+
+        return ret;
+    }
+
+    
     private static org.apache.log4j.Logger log = Logger.getLogger(Utils.class);
 
 }
