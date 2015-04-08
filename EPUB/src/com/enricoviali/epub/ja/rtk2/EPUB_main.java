@@ -1,3 +1,4 @@
+package com.enricoviali.epub.ja.rtk2;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,11 +22,11 @@ public class EPUB_main {
         suspendedTable = 0;
         previousTableID = "";
         previousTableFile = "";
-        scollamentoContatoriWarn = false;
-        previousFrame = 0;
+        previousRTK2Frame = 0;
 
         pageMainType = new PageMainType(this);
-        pageF201Chap4 = new PageF201Chap4(this);
+        pageF201Chap4 = new PageF201Chap04(this);
+        pageF701Chap11 = new PageF701Chap11(this);
 
         tableF201Chap4 = new TableF201Chap4();
     }
@@ -37,7 +38,7 @@ public class EPUB_main {
             if (recurse && fileEntry.isDirectory()) {
                 listFilesInFolder(fileEntry, recurse);
             } else {
-                // System.out.println(fileEntry.getAbsolutePath());
+                // System.out.println(fileEntry.getName();
             }
         }
         return filesList;
@@ -50,25 +51,31 @@ public class EPUB_main {
         tablesScanned = 0;
         tablesScannedOK = 0;
 
+        setPreviousTableID("no-table");
+
         for (File fileEntry : filesList) {
             fNumber = Utils.nrFromFName(fileEntry.getName());
             // log.error(fNumber+ " " +log.info(fileEntry.getName()());
 
             Document ePage = parseFile(fileEntry);
+            if (fNumber >= 800) {
+                break;
+            } else if (fNumber == 701) {
+                pageF701Chap11.parsePage(fNumber, ePage, fileEntry.getName());
+            } else if (fNumber == 201) {
+                pageF201Chap4.parsePage(fNumber, ePage, fileEntry.getName());
+            } else
 
             if ((fNumber < 201 || 201 < fNumber)) {
                 pageMainType.parsePage(fNumber, ePage, fileEntry.getName());
-                continue;
-            }
-            if (fNumber == 201) {
-                pageF201Chap4.parsePage(fNumber, ePage, fileEntry.getName());
-                continue;
             }
 
-            previousTableFile = fileEntry.getPath();
+            
+            setPreviousTableFile(fileEntry.getName());
             fileEntry = null;
             System.gc();
         }
+        log.info("================= normale uscita =======================");
 
     }
 
@@ -149,12 +156,12 @@ public class EPUB_main {
         this.entriesMain.add(mEntry);
     }
 
-    public int getPreviousFrame() {
-        return previousFrame;
+    public int getPreviousRTK2Frame() {
+        return previousRTK2Frame;
     }
 
-    public void setPreviousFrame(int previousFrame) {
-        this.previousFrame = previousFrame;
+    public void setPreviousRTK2Frame(int previousFrame) {
+        this.previousRTK2Frame = previousFrame;
     }
 
     public int getTablesCounter() {
@@ -177,41 +184,36 @@ public class EPUB_main {
         this.previousTableFile = previousTableFile;
     }
 
-    PageMainType   pageMainType;
-    PageF201Chap4  pageF201Chap4;
-
-    TableF201Chap4 tableF201Chap4;
-
-    int            curTableNr;
-
-    String         previousTableID;
-
     public String getPreviousTableID() {
         return previousTableID;
     }
-
+    
     public void setPreviousTableID(String previousTableID) {
         this.previousTableID = previousTableID;
     }
-
+    
+    
+    
+    PageMainType   pageMainType;
+    PageF201Chap04 pageF201Chap4;
+    PageF701Chap11 pageF701Chap11;
+    
+    TableF201Chap4 tableF201Chap4;
+    
+    int            curTableNr;
+    
+    String         previousTableID;
+    
+    
     String               previousTableFile;
     ArrayList<EntryMain> entriesMain;
     int                  tablesScanned;
-
+    
     int                  tablesScannedOK;
-    int                  previousFrame;
-
+    int                  previousRTK2Frame;
+    
     int                  tablesCounter;
     int                  errors;
-    boolean              scollamentoContatoriWarn;
-
-    public boolean isScollamentoContatoriWarn() {
-        return scollamentoContatoriWarn;
-    }
-
-    public void setScollamentoContatoriWarn(boolean scollamentoContatoriWarn) {
-        this.scollamentoContatoriWarn = scollamentoContatoriWarn;
-    }
-
+    
     private static org.apache.log4j.Logger log = Logger.getLogger(EPUB_main.class);
 }
