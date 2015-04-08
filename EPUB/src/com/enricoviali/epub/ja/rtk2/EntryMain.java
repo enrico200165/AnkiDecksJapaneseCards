@@ -398,6 +398,8 @@ public class EntryMain {
             if (!splitTable(fileNr, tableNr)) {
                 log.error(filename + " tableNr: " + tableNr);
                 ret = false;
+            } else {
+                log.debug("just for a brakpoint " + filename + " tableNr: " + tableNr);
             }
         }
         return ret;
@@ -432,19 +434,40 @@ public class EntryMain {
                     log.error("");
                 }
             }
+        } else if (tableNr == 317) {
+            if (fileNr == 103) {
+            } else if (fileNr == 104) {
+            }
+        } else if (tableNr == 446) {
+            if (fileNr == 104) {
+                if (!xpageTableCompleting) {
+                    setCompReading(rows.get(1).select("td").get(2).text());
+                    setCompKanj(rows.get(1).select("td").get(1).text());
+                    setRTK2Frame(rows.get(1).select("td").get(0).text());
+                    // setRTK2Frame(tmp);
+                } else {
+                    log.error("should not be completing");
+                    System.exit(1);
+                }
+            } else if (fileNr == 105) {
+                if (xpageTableCompleting) {
+                    setCompMean(rows.get(0).select("td").get(0).text());
+                } else {
+                    log.error("");
+                }
+            }
         } else {
-            log.error("");
+            log.error(fileNr + " " + tableNr);
         }
 
         return ret;
     }
 
-    
     static boolean manualTable(int fileNr, int tableNr) {
         boolean ret = false;
         ret = ret || ((fileNr == 102) && (tableNr == 185));
         ret = ret || ((fileNr == 103) && (tableNr == 191));
-        ret = ret || ((fileNr == 103) &&  (tableNr == 204));
+        ret = ret || ((fileNr == 103) && (tableNr == 204));
         if (ret)
             log.debug("");
         return ret;
@@ -453,12 +476,13 @@ public class EntryMain {
     static boolean splitTable(int fileNr, int tableNr) {
         boolean ret = false;
         ret = ret || ((fileNr == 102 || fileNr == 103) && (tableNr == 185));
+        ret = ret || ((fileNr == 103 || fileNr == 104) && (tableNr == 317));
+        ret = ret || ((fileNr == 104 || fileNr == 105) && (tableNr == 446));
         if (ret)
             log.debug("");
         return ret;
     }
 
-    
     public int getRTK2Frame() {
         return this.RTK2Frame;
     }
