@@ -64,7 +64,7 @@ public class PageNoCNRead_F201Chap04 implements IPage {
         Elements cellTables = table.select(subTableSel);
         int cellNr = 0;
         for (Element t : cellTables) {
-            mEntry.processCellTable(t,epub.getCurTableNr(),cellNr);
+            mEntry.processCellTable(t,fileNr,epub.getCurTableNr(),cellNr);
             cellNr++;
             if (epub.getCurTableNr() == 72 && cellNr == 2) 
                 break;

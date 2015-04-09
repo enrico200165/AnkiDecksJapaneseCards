@@ -46,6 +46,7 @@ public class EntryMain {
     }
 
     public String calculateCapitolo() {
+        
         if (getRTK2Frame() <= 56)
             return "01_0_kana_their_kanji";
 
@@ -59,6 +60,45 @@ public class EntryMain {
         if (getRTK2Frame() <= 623)
             return "03_1t_chinese_read";
 
+        
+        if (getRTK2Frame() <= 735)
+            return "04_no_chinese_read";
+
+        if (getRTK2Frame() <= 1026)
+            return "05_semi_pure";
+
+        if (getRTK2Frame() <= 1267)
+            return "06_everyday_words";
+        
+
+        if (getRTK2Frame() <= 1257)
+            return "06_everyday_words";
+
+
+        if (getRTK2Frame() <= 1269)
+            return "07_1_mixed_groups";
+        if (getRTK2Frame() <= 1305)
+            return "07_2_mixed_groups";
+        if (getRTK2Frame() <= 1394)
+            return "07_3_mixed_groups_2exc";
+        if (getRTK2Frame() <= 1669)
+            return "07_4_mixed_groups_rem";
+
+        if (getRTK2Frame() <= 1918)
+            return "08_everyday_words";
+
+        if (getRTK2Frame() <= 2071)
+            return "09_potpourri";
+
+
+        if (getRTK2Frame() <= 2409)
+            return "10_supplementary";
+
+        
+        // 09_potpourri
+        
+        log.error(getRTK2Frame());
+        
         return "error";
     }
 
@@ -108,7 +148,7 @@ public class EntryMain {
         String s = "";
 
         s += sep + "table" + eq + getTableID();
-        s += sep + "capitolo" + eq + calculateCapitolo();
+        s += sep + "capitolo";
         s += sep + "kanji" + eq + kanji;
         s += sep + "signal primitive" + eq + signPrim;
         s += sep + "On" + eq + readings;
@@ -274,6 +314,7 @@ public class EntryMain {
 
     public void setRTK2Frame(int rTK2Frame) {
         RTK2Frame = rTK2Frame;
+        capitolo = calculateCapitolo();
     }
 
     boolean processRigaRFrame(boolean overwrite, Element rigaRFrame, String filename, String tableID, int tableNr, int scanNr,
@@ -468,14 +509,29 @@ public class EntryMain {
                 log.error("should not be completing");
                 System.exit(1);
             }
+        } else if (tableNr == 256) {
+            if (fileNr == 602) {
+                assert (!xpageTableCompleting);
+                // --- riga kanji ---
+                setReadings2(rows.get(1).select("td").get(2).text());
+                setKanji2(rows.get(1).select("td").get(0).text());
+                // --- riga RFrame ----
+                // impostata correttamente
+            } else if (fileNr == 603) {
+                assert (!xpageTableCompleting);
+                setRTK1Frame2(rows.get(0).select("td").get(0).text());
+                setLink2("");
+                setComment("");
+            }
         } else {
             log.error(fileNr + " " + tableNr);
+            ret = false;
         }
 
         return ret;
     }
 
-    public boolean processCellTable(Element td, int tableNr, int cellNr) {
+    public boolean processCellTable(Element td, int fileNr,int tableNr, int cellNr) {
 
         String kanjiSel = ".x4-kanji";
         if (tableNr >= 57)
@@ -495,8 +551,8 @@ public class EntryMain {
         setRTK1Frame(RTK1Frame);
 
         epub.addToNoCNReadEntries(this);
-        log.info(getRTK2Frame() + " no chinese read - added ok"+toString());
-        
+        log.info("r-" + getRTK2Frame() + " no chinese read - added ok" + toString());
+
         return false;
     }
 

@@ -85,6 +85,10 @@ public class PageMainType implements IPage {
     @Override
     public boolean processTable(int fileNr, Element table, String filename, int scanNr) {
 
+        if (((fileNr == 602) || (fileNr == 603)) && epub.getCurTableNr() == 256 && true)
+            log.info("breakpoint");
+
+        
         xpageTableCompleting = (scanNr == 1) || epub.getPreviousTableID().equals(table.cssSelector());
         if (xpageTableCompleting) {
             if (((scanNr != 1) || (scanNr != 1)) && !mEntry.splitTable(fileNr, epub.getCurTableNr()))
@@ -109,8 +113,6 @@ public class PageMainType implements IPage {
         }
 
         
-        if (((fileNr == 202) || (fileNr == 202)) && epub.getCurTableNr() == 78 && true)
-            log.info("breakpoint");
 
         // --- --- --- --- --- load data to write at next iteration --- --- --- --- 
         Element kanji1Row = null;
