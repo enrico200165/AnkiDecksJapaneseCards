@@ -1,6 +1,8 @@
 package com.enricoviali.epub.ja.rtk2;
 
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.jsoup.nodes.Element;
@@ -69,7 +71,7 @@ public class Utils {
         return (withContent == 1);
     }
 
-
+    
     private static org.apache.log4j.Logger log = Logger.getLogger(Utils.class);
 
 }

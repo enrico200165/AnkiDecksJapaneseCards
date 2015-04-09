@@ -79,7 +79,6 @@ public class PageNoCNRead_F201Chap04 implements IPage {
         // ": ----------------------------------------" + "\n" + table.html());
 
 
-        EntryMain mEntry;
 
         epub.setPreviousTableID(table.cssSelector());
         epub.setPreviousTableFile(filename);

@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.jsoup.Jsoup;
@@ -21,11 +23,11 @@ public class EPUB_main {
         this.tablesCounter = 0; // prima tabella è di esempio
         entriesMain = new ArrayList<EntryMain>();
         noCNReading = new ArrayList<EntryMain>();
-        
+
         suspendedTable = 0;
         previousTableID = "";
         previousTableFile = "";
-        previousRTK2Frame = 0;
+        setPreviousRTK2Frame(0);
 
         pageMainType = new PageMainType(this);
         pageF201Chap4 = new PageNoCNRead_F201Chap04(this);
@@ -117,6 +119,39 @@ public class EPUB_main {
         log.error("fix this");
     }
 
+    int setPreviousRTK2FrameFromTable(Element table) {
+        // SE c'è un RTKFrame dobbiamo settare previous a tale valore
+
+        if (table.text().indexOf("r-") != 1) { // operazione pesante solo quando necessaria
+            Pattern pattern = Pattern.compile(">[\\s]*r-([0-9]+)[^0-9]*");
+            Matcher matcher = pattern.matcher(table.text());
+            if (matcher.find()) {
+                int prevFr = Integer.parseInt(matcher.group(1));
+                setPreviousRTK2Frame(prevFr);
+                return prevFr;
+            } else {
+                return -2;
+            }
+        } else {
+            return -2;
+        }
+    }
+
+    int getRTK2FrameFromTable(Element table) {
+        // SE c'è un RTKFrame dobbiamo settare previous a tale valore
+
+        if (table.text().indexOf("r-") != 1) { // operazione pesante solo quando necessaria
+            Pattern pattern = Pattern.compile(".*r-([0-9]+)[^0-9]*");
+            Matcher matcher = pattern.matcher(table.text());
+            if (matcher.find())
+            {
+                int prevFr = Integer.parseInt(matcher.group(1));
+                return prevFr;
+            }
+        }
+        return -2;
+    }
+
 
     // elementi di lavoro, dovrebbero essere variabili locali ma per gestire le
     // tabelle spezzate su due file devo mantener i valori
@@ -168,13 +203,15 @@ public class EPUB_main {
         this.noCNReading.add(mEntry);
     }
 
-    
-    
     public int getPreviousRTK2Frame() {
         return previousRTK2Frame;
     }
 
     public void setPreviousRTK2Frame(int previousFrame) {
+        if ((previousFrame != previousRTK2Frame + 1)
+                && (previousRTK2Frame > 2)
+                && !(previousRTK2Frame == 762 && previousFrame == 1))
+            log.warn("old value: " + previousRTK2Frame + " new value: " + previousFrame);
         this.previousRTK2Frame = previousFrame;
     }
 
@@ -208,7 +245,7 @@ public class EPUB_main {
 
 
     IPage                                  pageMainType;
-    PageNoCNRead_F201Chap04                         pageF201Chap4;
+    PageNoCNRead_F201Chap04                pageF201Chap4;
     PageF701Chap11                         pageF701Chap11;
 
     TableF201Chap4                         tableF201Chap4;
@@ -221,9 +258,7 @@ public class EPUB_main {
 
     ArrayList<EntryMain>                   entriesMain;
     ArrayList<EntryMain>                   noCNReading;
-    
-    
-    
+
     int                                    tablesScanned;
 
     int                                    tablesScannedOK;

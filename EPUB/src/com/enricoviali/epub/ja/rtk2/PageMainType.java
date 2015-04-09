@@ -1,5 +1,9 @@
 package com.enricoviali.epub.ja.rtk2;
 
+import java.util.SplittableRandom;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.log4j.Logger;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -18,7 +22,7 @@ public class PageMainType implements IPage {
         workRows.clear();
     }
 
-    boolean tableToSkip(int fileNr, int tableNr) {
+    boolean tableToSkip(Element table, int fileNr, int tableNr) {
         boolean skip = false;
 
         skip |= (tableNr == 1 && (fileNr == 5)); // tabella di esempio
@@ -39,7 +43,9 @@ public class PageMainType implements IPage {
         skip |= (tableNr == 75 && (fileNr == 500 || fileNr == 501));
         skip |= (tableNr == 88 && (fileNr == 600 || fileNr == 601));
         skip |= (tableNr == 256 && (fileNr == 602 || fileNr == 603));
+               
         */
+
         return skip;
     }
 
@@ -61,7 +67,8 @@ public class PageMainType implements IPage {
         for (Element table : tablesInPage) {
             int tableIDNr = Utils.tableNr(table.cssSelector());
 
-            if (tableToSkip(fileNr, tableIDNr)) {
+            if (tableToSkip(table, fileNr, tableIDNr)) {
+                epub.setPreviousRTK2FrameFromTable(table);
                 continue;
             }
             epub.tablesScannedIncr();
@@ -85,10 +92,13 @@ public class PageMainType implements IPage {
     @Override
     public boolean processTable(int fileNr, Element table, String filename, int scanNr) {
 
-        if (((fileNr == 602) || (fileNr == 603)) && epub.getCurTableNr() == 256 && true)
+        /*
+        if (epub.getCurTableNr() == 185)
             log.info("breakpoint");
+        if (epub.getCurTableNr() == 203)
+            log.info("breakpoint");
+        */
 
-        
         xpageTableCompleting = (scanNr == 1) || epub.getPreviousTableID().equals(table.cssSelector());
         if (xpageTableCompleting) {
             if (((scanNr != 1) || (scanNr != 1)) && !mEntry.splitTable(fileNr, epub.getCurTableNr()))
@@ -111,8 +121,6 @@ public class PageMainType implements IPage {
                 }
             }
         }
-
-        
 
         // --- --- --- --- --- load data to write at next iteration --- --- --- --- 
         Element kanji1Row = null;
@@ -169,11 +177,11 @@ public class PageMainType implements IPage {
         // assert ((nrNonEmptyRows == recognizedRows));
 
         // just to set breakpoints
-        if (((fileNr == 104) || (fileNr == 105)) && epub.getCurTableNr() == 446 && false)
+        if (((fileNr != -1) || (fileNr != -1)) && epub.getCurTableNr() == 317 && true)
             log.info("breakpoint");
 
         if (mEntry.manualTable(fileNr, epub.getCurTableNr())) {
-            mEntry.setFillManually(epub.getCurTableNr());
+            mEntry.setFillManually(epub.getRTK2FrameFromTable(table));
         } else {
             if (!mEntry.processStandardEntry(table, kanji1Row, kanji2Row, RFrameRow, CommentRow, filename, epub.getCurTableNr(), scanNr,
                     nrNonEmptyRows)) {
@@ -186,19 +194,21 @@ public class PageMainType implements IPage {
 
         // --- --- ---- elaboriamo workRows --- ---- ---- ----
 
+        // log.info(filename + " " + table.cssSelector() + " prev " + epub.getPreviousRTK2Frame() + " curr= " + mEntry.getRTK2Frame());
+        // Utils.esco("discontinuità rFrames");
+
         if ((mEntry.getRTK2Frame() != epub.getPreviousRTK2Frame() + 1)
-                && (
-                (scanNr != 1)
-                || (scanNr != 1)
-                )) {
-            log.error("discontinuità rFrames, previous=" + epub.getPreviousRTK2Frame() + " current= " + mEntry.getRTK2Frame()
-                    + " forzo allineamento manualmente");
+                && ((scanNr != 1) || (scanNr != 1))
+                && !mEntry.splitTable(fileNr, epub.getCurTableNr())) {
+            log.error("discontinuità rFrames, prev=" + epub.getPreviousRTK2Frame() + " curr= " + mEntry.getRTK2Frame() +
+                    " " + table.cssSelector() + " " + filename + " forzo allineamento manualmente");
             // Utils.esco("discontinuità rFrames");
-            epub.setPreviousRTK2Frame(mEntry.getRTK2Frame()-1);
+            epub.setPreviousRTK2Frame(mEntry.getRTK2Frame() - 1);
         }
 
-        if ((mEntry.getRTK2Frame() != epub.getTablesCounter() + 1) &&
-                (scanNr != 1)) {
+        if ((mEntry.getRTK2Frame() != epub.getTablesCounter() + 1) 
+             && (scanNr != 1)
+             && !mEntry.splitTable(fileNr, epub.getCurTableNr())) {
             log.warn(filename + " " + table.cssSelector() + " scollamento contatory: rFrame=" + mEntry.getRTK2Frame()
                     + " tablesCounter="
                     + epub.getTablesCounter() + " selector: "
@@ -213,9 +223,6 @@ public class PageMainType implements IPage {
     }
 
 
-    
-    
-    
     boolean                                xpageTableCompleting;
 
     EntryMain                              mEntry;

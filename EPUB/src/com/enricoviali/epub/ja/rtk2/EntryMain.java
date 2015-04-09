@@ -20,7 +20,6 @@ public class EntryMain {
         fillManually = false;
 
         tableID = null;
-        RTK2Frame = -1;
         capitolo = null;
         tableID = null;
         // --- Kanji1
@@ -36,7 +35,7 @@ public class EntryMain {
         link2 = null;
         RTK1Frame2 = null;
         // --- RFrame
-        RTK2Frame = -1;
+        setRTK2Frame(-1);
         compKanj = null;
         compReading = null;
         compMean = null;
@@ -155,7 +154,7 @@ public class EntryMain {
         s += sep + "link" + eq + link;
         s += sep + "RTK1Frame" + eq + RTK1Frame;
         // da riga 2
-        s += sep + "RTK2Frame" + eq + RTK2Frame;
+        s += sep + "RTK2Frame" + eq + getRTK2Frame();
 
         return s;
     }
@@ -551,8 +550,13 @@ public class EntryMain {
         setRTK1Frame(RTK1Frame);
 
         epub.addToNoCNReadEntries(this);
-        log.info("r-" + getRTK2Frame() + " no chinese read - added ok" + toString());
+        log.info("r-" + getRTK2Frame() + " previous "+ epub.getPreviousRTK2Frame() + " ok");
+        epub.setPreviousRTK2Frame(getRTK2Frame());
+        // log.info("r-" + getRTK2Frame() + " no chinese read - added ok" + toString());
 
+        if (epub.getPreviousRTK2Frame() == 734)
+            log.debug("");
+        
         return false;
     }
 
@@ -576,14 +580,15 @@ public class EntryMain {
         return ret;
     }
 
+    
+    
     public int getRTK2Frame() {
         return this.RTK2Frame;
     }
 
-    public int setRTK2Frame(String sPar) {
+    public void setRTK2Frame(String sPar) {
         String s = sPar.substring(2);
-        this.RTK2Frame = Integer.parseInt(s);
-        return RTK2Frame;
+        setRTK2Frame(Integer.parseInt(s));
     }
 
     public int getRTK1Frame() {
