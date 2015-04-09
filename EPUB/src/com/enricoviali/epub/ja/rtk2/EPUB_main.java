@@ -1,4 +1,5 @@
 package com.enricoviali.epub.ja.rtk2;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -19,13 +20,15 @@ public class EPUB_main {
     void reset() {
         this.tablesCounter = 0; // prima tabella è di esempio
         entriesMain = new ArrayList<EntryMain>();
+        noCNReading = new ArrayList<EntryMain>();
+        
         suspendedTable = 0;
         previousTableID = "";
         previousTableFile = "";
         previousRTK2Frame = 0;
 
         pageMainType = new PageMainType(this);
-        pageF201Chap4 = new PageF201Chap04(this);
+        pageF201Chap4 = new PageNoCNRead_F201Chap04(this);
         pageF701Chap11 = new PageF701Chap11(this);
 
         tableF201Chap4 = new TableF201Chap4();
@@ -53,24 +56,27 @@ public class EPUB_main {
 
         setPreviousTableID("no-table");
 
+        IPage pageParser = pageMainType;
         for (File fileEntry : filesList) {
             fNumber = Utils.nrFromFName(fileEntry.getName());
             // log.error(fNumber+ " " +log.info(fileEntry.getName()());
-
             Document ePage = parseFile(fileEntry);
-            if (fNumber >= 800) {
-                break;
-            } else if (fNumber == 701) {
-                pageF701Chap11.parsePage(fNumber, ePage, fileEntry.getName());
-            } else if (fNumber == 201) {
-                pageF201Chap4.parsePage(fNumber, ePage, fileEntry.getName());
-            } else
 
-            if ((fNumber < 201 || 201 < fNumber)) {
-                pageMainType.parsePage(fNumber, ePage, fileEntry.getName());
+            if (fNumber == 201) {
+                pageParser = pageF201Chap4;
             }
+            if (fNumber == 202) {
+                pageParser = pageMainType;
+            }
+            if (fNumber == 701) {
+                pageParser = pageF701Chap11;
+            }
+            if (fNumber >= 800) {
+                log.error("maggiore di 800");
+                break;
+            }
+            pageParser.parsePage(fNumber, ePage, fileEntry.getName());
 
-            
             setPreviousTableFile(fileEntry.getName());
             fileEntry = null;
             System.gc();
@@ -111,6 +117,7 @@ public class EPUB_main {
         log.error("fix this");
     }
 
+
     // elementi di lavoro, dovrebbero essere variabili locali ma per gestire le
     // tabelle spezzate su due file devo mantener i valori
 
@@ -127,6 +134,7 @@ public class EPUB_main {
                         // la
                         // terza
                         // riga
+
 
     public void setTablesScanned(int val) {
         this.tablesScanned = val;
@@ -156,6 +164,12 @@ public class EPUB_main {
         this.entriesMain.add(mEntry);
     }
 
+    public void addToNoCNReadEntries(EntryMain mEntry) {
+        this.noCNReading.add(mEntry);
+    }
+
+    
+    
     public int getPreviousRTK2Frame() {
         return previousRTK2Frame;
     }
@@ -187,33 +201,36 @@ public class EPUB_main {
     public String getPreviousTableID() {
         return previousTableID;
     }
-    
+
     public void setPreviousTableID(String previousTableID) {
         this.previousTableID = previousTableID;
     }
+
+
+    IPage                                  pageMainType;
+    PageNoCNRead_F201Chap04                         pageF201Chap4;
+    PageF701Chap11                         pageF701Chap11;
+
+    TableF201Chap4                         tableF201Chap4;
+
+    int                                    curTableNr;
+
+    String                                 previousTableID;
+
+    String                                 previousTableFile;
+
+    ArrayList<EntryMain>                   entriesMain;
+    ArrayList<EntryMain>                   noCNReading;
     
     
     
-    PageMainType   pageMainType;
-    PageF201Chap04 pageF201Chap4;
-    PageF701Chap11 pageF701Chap11;
-    
-    TableF201Chap4 tableF201Chap4;
-    
-    int            curTableNr;
-    
-    String         previousTableID;
-    
-    
-    String               previousTableFile;
-    ArrayList<EntryMain> entriesMain;
-    int                  tablesScanned;
-    
-    int                  tablesScannedOK;
-    int                  previousRTK2Frame;
-    
-    int                  tablesCounter;
-    int                  errors;
-    
+    int                                    tablesScanned;
+
+    int                                    tablesScannedOK;
+    int                                    previousRTK2Frame;
+
+    int                                    tablesCounter;
+    int                                    errors;
+
     private static org.apache.log4j.Logger log = Logger.getLogger(EPUB_main.class);
 }

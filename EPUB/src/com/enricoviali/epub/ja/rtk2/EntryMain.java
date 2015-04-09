@@ -304,7 +304,7 @@ public class EntryMain {
 
         pos--; // usually 3
         if (pos < 0) {
-            log.error("negative pos");
+            log.warn(filename + " " + tableNr + " negative pos");
             return false;
         }
         if (overwrite || getCompMean() == null) {
@@ -314,7 +314,7 @@ public class EntryMain {
 
         pos--; // usually 2
         if (pos < 0) {
-            log.error("negative pos");
+            log.warn(filename + " " + tableNr + " negative pos");
             return false;
         }
         if (overwrite || getCompReading() == null) {
@@ -324,7 +324,7 @@ public class EntryMain {
 
         pos--; // usually 1
         if (pos < 0) {
-            log.error("negative pos");
+            log.warn(filename + " " + tableNr + " negative pos");
             return false;
         }
         if (overwrite || getCompKanj() == null) {
@@ -334,7 +334,7 @@ public class EntryMain {
 
         pos--; // usually 0
         if (pos < 0) {
-            log.error("negative pos");
+            log.warn(filename + " " + tableNr + " negative pos");
             return false;
         }
         if (overwrite || getRTK2Frame() == -1) {
@@ -456,11 +456,48 @@ public class EntryMain {
                     log.error("");
                 }
             }
+        } else if (tableNr == 78 && fileNr == 202) {
+            if (!xpageTableCompleting) {
+                // --- riga kanji ---
+                setKanji(rows.get(0).select("td").get(1).text());
+                setReadings(rows.get(0).select("td").get(3).text());
+                setRTK1Frame(rows.get(0).select("td").get(5).text());
+                // --- riga RFrame ----
+                // impostata correttamente
+            } else {
+                log.error("should not be completing");
+                System.exit(1);
+            }
         } else {
             log.error(fileNr + " " + tableNr);
         }
 
         return ret;
+    }
+
+    public boolean processCellTable(Element td, int tableNr, int cellNr) {
+
+        String kanjiSel = ".x4-kanji";
+        if (tableNr >= 57)
+            kanjiSel = ".x2-lesson-text-77445-10-override";
+
+        String kanji = td.select(kanjiSel).get(0).text();
+        String RTK2FrameStr = td.select(".x2-r-number").get(0).text();
+        String RTK1Frame = td.select(".x4-cross-reference-102345-10-filtered").get(0).text();
+
+        setKanji(kanji);
+
+        if (RTK2FrameStr.lastIndexOf("*") == -1)
+            setRTK2Frame(RTK2FrameStr);
+        else {
+            setRTK2Frame(RTK2FrameStr.split("\\*")[0]);
+        }
+        setRTK1Frame(RTK1Frame);
+
+        epub.addToNoCNReadEntries(this);
+        log.info(getRTK2Frame() + " no chinese read - added ok"+toString());
+        
+        return false;
     }
 
     static boolean manualTable(int fileNr, int tableNr) {
