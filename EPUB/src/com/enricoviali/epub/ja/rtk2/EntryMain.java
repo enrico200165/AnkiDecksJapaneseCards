@@ -45,7 +45,7 @@ public class EntryMain {
     }
 
     public String calculateCapitolo() {
-        
+
         if (getRTK2Frame() <= 56)
             return "01_0_kana_their_kanji";
 
@@ -59,7 +59,6 @@ public class EntryMain {
         if (getRTK2Frame() <= 623)
             return "03_1t_chinese_read";
 
-        
         if (getRTK2Frame() <= 735)
             return "04_no_chinese_read";
 
@@ -68,11 +67,9 @@ public class EntryMain {
 
         if (getRTK2Frame() <= 1267)
             return "06_everyday_words";
-        
 
         if (getRTK2Frame() <= 1257)
             return "06_everyday_words";
-
 
         if (getRTK2Frame() <= 1269)
             return "07_1_mixed_groups";
@@ -89,15 +86,13 @@ public class EntryMain {
         if (getRTK2Frame() <= 2071)
             return "09_potpourri";
 
-
         if (getRTK2Frame() <= 2409)
             return "10_supplementary";
 
-        
         // 09_potpourri
-        
+
         log.error(getRTK2Frame());
-        
+
         return "error";
     }
 
@@ -333,8 +328,8 @@ public class EntryMain {
                 nonEmpty.add(e);
         }
         if (nonEmpty.size() < 3) {
-            if (tableNr != 185 || tableNr != 185)
-                log.error(filename + " " + tableID + " riga RFrame con elementi mancanti\n" + rigaRFrame.html());
+            if (!splitTable(Utils.nrFromFName(filename), Utils.tableNr(tableID)))
+                log.warn(filename + " " + tableID + " riga RFrame con elementi mancanti\n" + rigaRFrame.html());
             return false;
         }
 
@@ -423,20 +418,20 @@ public class EntryMain {
         String tableID = table.cssSelector();
         int fileNr = Utils.nrFromFName(filename);
 
-        if (!processRigaKanji1(true, fileNr, rigaKanji1, filename, table.cssSelector(), tableNr, scanNr, epub.getTablesCounter()))
+        if (!processRigaKanji1(true, fileNr, rigaKanji1, filename, table.cssSelector(), tableNr, scanNr, epub.getCurTableNr()))
             ret = false;
-        if (!processRigaKanji2(true, fileNr, rigaKanji2, filename, table.cssSelector(), tableNr, scanNr, epub.getTablesCounter())) {
+        if (!processRigaKanji2(true, fileNr, rigaKanji2, filename, table.cssSelector(), tableNr, scanNr, epub.getCurTableNr())) {
 
         }
-        if (!processRigaRFrame(true, rigaRFrame, filename, table.cssSelector(), tableNr, scanNr, epub.getTablesCounter()))
+        if (!processRigaRFrame(true, rigaRFrame, filename, table.cssSelector(), tableNr, scanNr, epub.getCurTableNr()))
             ret = false;
-        if (!processRigaComment(true, rigaCommento, filename, table.cssSelector(), tableNr, scanNr, epub.getTablesCounter())) {
+        if (!processRigaComment(true, rigaCommento, filename, table.cssSelector(), tableNr, scanNr, epub.getCurTableNr())) {
         }
 
         if (ret) {
         } else {
             if (!splitTable(fileNr, tableNr)) {
-                log.error(filename + " tableNr: " + tableNr);
+                log.error(filename + " tableNr: " + tableNr+ " failed standard processing");
                 ret = false;
             } else {
                 log.debug("just for a brakpoint " + filename + " tableNr: " + tableNr);
@@ -530,7 +525,7 @@ public class EntryMain {
         return ret;
     }
 
-    public boolean processCellTable(Element td, int fileNr,int tableNr, int cellNr) {
+    public boolean processCellTable(Element td, int fileNr, int tableNr, int cellNr) {
 
         String kanjiSel = ".x4-kanji";
         if (tableNr >= 57)
@@ -550,13 +545,13 @@ public class EntryMain {
         setRTK1Frame(RTK1Frame);
 
         epub.addToNoCNReadEntries(this);
-        log.info("r-" + getRTK2Frame() + " previous "+ epub.getPreviousRTK2Frame() + " ok");
+        log.debug("r-" + getRTK2Frame() + " previous " + epub.getPreviousRTK2Frame() + " ok");
         epub.setPreviousRTK2Frame(getRTK2Frame());
         // log.info("r-" + getRTK2Frame() + " no chinese read - added ok" + toString());
 
         if (epub.getPreviousRTK2Frame() == 734)
             log.debug("");
-        
+
         return false;
     }
 
@@ -580,8 +575,6 @@ public class EntryMain {
         return ret;
     }
 
-    
-    
     public int getRTK2Frame() {
         return this.RTK2Frame;
     }

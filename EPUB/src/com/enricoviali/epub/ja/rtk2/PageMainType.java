@@ -74,6 +74,9 @@ public class PageMainType implements IPage {
             epub.tablesScannedIncr();
 
             epub.setCurTableNr(Utils.tableNr(table.cssSelector()));
+            // log.info(table.cssSelector()+ " "+epub.getCurTableNr());
+            if (epub.getCurTableNr() == 185)
+                log.debug("");
 
             if (processTable(fileNr, table, filename, epub.getTablesScanned())) {
                 epub.tablesScannedIncrOK();
@@ -109,7 +112,7 @@ public class PageMainType implements IPage {
             // --- if change of table we must write
             if (mEntry != null) {
                 if (mEntry.isValid()) {
-                    epub.tablesCounterIncr();
+                    // eliminare epub.curTableNrInc();
                     epub.addToMainEntries(mEntry);
                     epub.setPreviousRTK2Frame(mEntry.getRTK2Frame());
                     mEntry.reset();
@@ -177,8 +180,10 @@ public class PageMainType implements IPage {
         // assert ((nrNonEmptyRows == recognizedRows));
 
         // just to set breakpoints
-        if (((fileNr != -1) || (fileNr != -1)) && epub.getCurTableNr() == 317 && true)
-            log.info("breakpoint");
+        if ((((fileNr != -1) || (fileNr != -1)) && epub.getCurTableNr() == 185)
+                || (epub.getCurTableNr() == 186)) {
+            // log.info("breakpoint");
+        }
 
         if (mEntry.manualTable(fileNr, epub.getCurTableNr())) {
             mEntry.setFillManually(epub.getRTK2FrameFromTable(table));
@@ -205,17 +210,6 @@ public class PageMainType implements IPage {
             // Utils.esco("discontinuità rFrames");
             epub.setPreviousRTK2Frame(mEntry.getRTK2Frame() - 1);
         }
-
-        if ((mEntry.getRTK2Frame() != epub.getTablesCounter() + 1) 
-             && (scanNr != 1)
-             && !mEntry.splitTable(fileNr, epub.getCurTableNr())) {
-            log.warn(filename + " " + table.cssSelector() + " scollamento contatory: rFrame=" + mEntry.getRTK2Frame()
-                    + " tablesCounter="
-                    + epub.getTablesCounter() + " selector: "
-                    + table.cssSelector());
-        }
-
-        //
 
         // --- scritture per l'ultimo tavola, codifica caso per caso
 

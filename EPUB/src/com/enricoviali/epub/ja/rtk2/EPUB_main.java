@@ -20,7 +20,6 @@ public class EPUB_main {
     }
 
     void reset() {
-        this.tablesCounter = 0; // prima tabella è di esempio
         entriesMain = new ArrayList<EntryMain>();
         noCNReading = new ArrayList<EntryMain>();
 
@@ -121,20 +120,20 @@ public class EPUB_main {
 
     int setPreviousRTK2FrameFromTable(Element table) {
         // SE c'è un RTKFrame dobbiamo settare previous a tale valore
+        Pattern pattern = Pattern.compile("[\\s]*r-([0-9]+)[^0-9]*");
 
-        if (table.text().indexOf("r-") != 1) { // operazione pesante solo quando necessaria
-            Pattern pattern = Pattern.compile(">[\\s]*r-([0-9]+)[^0-9]*");
-            Matcher matcher = pattern.matcher(table.text());
-            if (matcher.find()) {
-                int prevFr = Integer.parseInt(matcher.group(1));
-                setPreviousRTK2Frame(prevFr);
-                return prevFr;
-            } else {
-                return -2;
+        for (Element e : table.select("td")) {
+            if (e.text().trim().length() < 7) {
+                Matcher matcher = pattern.matcher(e.text());
+                if (matcher.find()) {
+                    String matched = matcher.group(1);
+                    int prevFr = Integer.parseInt(matched);
+                    setPreviousRTK2Frame(prevFr);
+                    return prevFr;
+                }
             }
-        } else {
-            return -2;
         }
+        return -2;
     }
 
     int getRTK2FrameFromTable(Element table) {
@@ -183,16 +182,21 @@ public class EPUB_main {
         this.curTableNr = val;
     }
 
+    public void curTableNrInc() {
+        this.curTableNr++;
+    }
+
+    public int getCurTableNr() {
+        return curTableNr;
+    }
+    
+    
     public void tablesScannedIncrOK() {
         this.tablesScannedOK++;
     }
 
     public int getTablesScanned() {
         return tablesScanned;
-    }
-
-    public int getCurTableNr() {
-        return curTableNr;
     }
 
     void addToMainEntries(EntryMain mEntry) {
@@ -211,20 +215,8 @@ public class EPUB_main {
         if ((previousFrame != previousRTK2Frame + 1)
                 && (previousRTK2Frame > 2)
                 && !(previousRTK2Frame == 762 && previousFrame == 1))
-            log.warn("old value: " + previousRTK2Frame + " new value: " + previousFrame);
+            log.warn("setting RTK2Frame inconsistent: previous value: " + previousRTK2Frame + " new value: " + previousFrame);
         this.previousRTK2Frame = previousFrame;
-    }
-
-    public int getTablesCounter() {
-        return tablesCounter;
-    }
-
-    public void tablesCounterIncr() {
-        tablesCounter++;
-    }
-
-    public void setTablesCounter(int tablesCounter) {
-        this.tablesCounter = tablesCounter;
     }
 
     public String getPreviousTableFile() {
@@ -243,6 +235,14 @@ public class EPUB_main {
         this.previousTableID = previousTableID;
     }
 
+    public int getTablesScannedOK() {
+        return tablesScannedOK;
+    }
+    
+    public void setTablesScannedOK(int tablesScannedOK) {
+        this.tablesScannedOK = tablesScannedOK;
+    }
+    
 
     IPage                                  pageMainType;
     PageNoCNRead_F201Chap04                pageF201Chap4;
@@ -250,21 +250,19 @@ public class EPUB_main {
 
     TableF201Chap4                         tableF201Chap4;
 
-    int                                    curTableNr;
-
     String                                 previousTableID;
-
     String                                 previousTableFile;
+
+    int                                    curTableNr;
+    int                                    tablesScanned;
+
+    int                                    tablesScannedOK;
 
     ArrayList<EntryMain>                   entriesMain;
     ArrayList<EntryMain>                   noCNReading;
 
-    int                                    tablesScanned;
-
-    int                                    tablesScannedOK;
     int                                    previousRTK2Frame;
 
-    int                                    tablesCounter;
     int                                    errors;
 
     private static org.apache.log4j.Logger log = Logger.getLogger(EPUB_main.class);

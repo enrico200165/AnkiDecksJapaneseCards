@@ -117,7 +117,7 @@ public class PageF701Chap11 implements IPage {
 
         // --- --- ---- elaboriamo righe --- ---- ---- ----
 
-        if (epub.getTablesCounter() == 0 && mEntry.getRTK2Frame() == 762) {
+        if (epub.getCurTableNr() == 0 && mEntry.getRTK2Frame() == 762) {
             log.warn("salto tabella di esempio");
             return true;
         }
@@ -128,7 +128,7 @@ public class PageF701Chap11 implements IPage {
         }
 
         if (mEntry.isValid()) {
-            epub.tablesCounterIncr();
+            epub.curTableNrInc();
             epub.addToMainEntries(mEntry);
             epub.setPreviousRTK2Frame(mEntry.getRTK2Frame());
             // log.info("lastGoodFrame: " + previousFrame);
@@ -136,8 +136,8 @@ public class PageF701Chap11 implements IPage {
             log.warn("entry not complete");
         }
 
-        if (mEntry.getRTK2Frame() != epub.getTablesCounter()) {
-                log.warn("file: " + filename + " scollamento contatory: rFrame=" + mEntry.getRTK2Frame() + " tablesCounter=" + epub.getTablesCounter() + " selector: " + table.cssSelector());
+        if (mEntry.getRTK2Frame() != epub.getCurTableNr()) {
+                log.warn("file: " + filename + " scollamento contatory: rFrame=" + mEntry.getRTK2Frame() + " tablesCounter=" + epub.getCurTableNr() + " selector: " + table.cssSelector());
         }
 
         // log.info(mEntry.toString());
@@ -153,10 +153,10 @@ public class PageF701Chap11 implements IPage {
         String tableID = table.cssSelector();
         int fileNr = Utils.nrFromFName(filename);
 
-        ret = ret && mEntry.processRigaKanji1(true,fileNr, tableRows[0], filename, table.cssSelector(), tableNr, scanNr, epub.getTablesCounter());
-        ret = ret && mEntry.processRigaRFrame(true,tableRows[1], filename, table.cssSelector(), tableNr, scanNr, epub.getTablesCounter());
+        ret = ret && mEntry.processRigaKanji1(true,fileNr, tableRows[0], filename, table.cssSelector(), tableNr, scanNr, epub.getCurTableNr());
+        ret = ret && mEntry.processRigaRFrame(true,tableRows[1], filename, table.cssSelector(), tableNr, scanNr, epub.getCurTableNr());
         if (tableRows[2] != null)
-            ret = ret && mEntry.processRiga3(tableRows[2], filename, table.cssSelector(), tableNr, scanNr, epub.getTablesCounter());
+            ret = ret && mEntry.processRiga3(tableRows[2], filename, table.cssSelector(), tableNr, scanNr, epub.getCurTableNr());
         if (ret)
             return mEntry;
         else
