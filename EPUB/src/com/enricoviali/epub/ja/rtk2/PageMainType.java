@@ -109,20 +109,7 @@ public class PageMainType implements IPage {
                         + " \nfile     : "
                         + filename);
         } else {
-            // --- if change of table we must write
-            if (mEntry != null) {
-                if (mEntry.isValid()) {
-                    // eliminare epub.curTableNrInc();
-                    epub.addToMainEntries(mEntry);
-                    epub.setPreviousRTK2Frame(mEntry.getRTK2Frame());
-                    mEntry.reset();
-                    // log.info(mEntry.toString());
-                } else {
-                    log.warn(filename + " " + table.cssSelector() + " entry not valid");
-                    log.error("invalid esco");
-                    // System.exit(1);
-                }
-            }
+            finalizeEntry(filename, table, mEntry);
         }
 
         // --- --- --- --- --- load data to write at next iteration --- --- --- --- 
@@ -212,8 +199,31 @@ public class PageMainType implements IPage {
         }
 
         // --- scritture per l'ultimo tavola, codifica caso per caso
+        if ((mEntry.getRTK2Frame() == 623  )
+        || false) {
+            finalizeEntry(filename, table, mEntry);
+        }
 
         return true;
+    }
+
+    boolean finalizeEntry(String fileName, Element table, EntryMain e) {
+        // --- if change of table we must write
+        if (e != null) {
+            if (e.isValid()) {
+                // eliminare epub.curTableNrInc();
+                epub.addToMainEntries(e);
+                epub.setPreviousRTK2Frame(e.getRTK2Frame());
+                e.reset();
+                // log.info(mEntry.toString());
+            } else {
+                log.warn(fileName + " " + table.cssSelector() + " entry not valid");
+                log.error("invalid esco");
+                // System.exit(1);
+                return false;
+            }
+        }
+        return false;
     }
 
 

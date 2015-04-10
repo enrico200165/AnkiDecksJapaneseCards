@@ -122,7 +122,12 @@ public class EPUB_main {
         // SE c'è un RTKFrame dobbiamo settare previous a tale valore
         Pattern pattern = Pattern.compile("[\\s]*r-([0-9]+)[^0-9]*");
 
-        for (Element e : table.select("td")) {
+        /* possibile trovare più elementi della forma r-  ex. tabella di esempio
+         * l'ultimo dovrebbe essere quello giusto (non sicuro)
+        */
+        
+        for (int i = table.select("td").size()-1; i >= 0;i--) {
+            Element e = table.select("td").get(i);
             if (e.text().trim().length() < 7) {
                 Matcher matcher = pattern.matcher(e.text());
                 if (matcher.find()) {
@@ -217,6 +222,10 @@ public class EPUB_main {
                 && !(previousRTK2Frame == 762 && previousFrame == 1))
             log.warn("setting RTK2Frame inconsistent: previous value: " + previousRTK2Frame + " new value: " + previousFrame);
         this.previousRTK2Frame = previousFrame;
+        
+        // log.info("previousRTK2Frame: "+previousRTK2Frame);
+        if (previousRTK2Frame == 622)
+            log.debug("just to break");
     }
 
     public String getPreviousTableFile() {
