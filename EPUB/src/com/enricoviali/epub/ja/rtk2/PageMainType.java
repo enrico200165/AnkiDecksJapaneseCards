@@ -101,14 +101,11 @@ public class PageMainType implements IPage {
         if (epub.getCurTableNr() == 203)
             log.info("breakpoint");
         */
-
-        xpageTableCompleting = (scanNr == 1) || epub.getPreviousTableID().equals(table.cssSelector());
-        if (xpageTableCompleting) {
-            if (((scanNr != 1) || (scanNr != 1)) && !mEntry.splitTable(fileNr, epub.getCurTableNr()))
-                log.warn("intial table  or same table: " + epub.getPreviousTableID() + " \nprev file: " + epub.getPreviousTableFile()
-                        + " \nfile     : "
-                        + filename);
-        } else {
+        boolean finalizeTable = false;
+        xpageTableCompleting = epub.getPreviousTableID().equals(table.cssSelector()) || epub.getCurTableNr() == 1;
+        boolean initialTable = (epub.previousRTK2Frame  == 575)|| (epub.previousRTK2Frame  == 735);        
+        finalizeTable = !xpageTableCompleting && !initialTable;                
+        if (finalizeTable) {
             finalizeEntry(filename, table, mEntry);
         }
 
@@ -199,8 +196,8 @@ public class PageMainType implements IPage {
         }
 
         // --- scritture per l'ultimo tavola, codifica caso per caso
-        if ((mEntry.getRTK2Frame() == 623  )
-        || false) {
+        if ((mEntry.getRTK2Frame() == 574  )
+        || (mEntry.getRTK2Frame() == 623  )) {
             finalizeEntry(filename, table, mEntry);
         }
 

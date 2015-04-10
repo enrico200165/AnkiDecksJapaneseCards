@@ -55,7 +55,7 @@ public class EPUB_main {
         tablesScanned = 0;
         tablesScannedOK = 0;
 
-        setPreviousTableID("no-table");
+        setPreviousTableID("");
 
         IPage pageParser = pageMainType;
         for (File fileEntry : filesList) {
