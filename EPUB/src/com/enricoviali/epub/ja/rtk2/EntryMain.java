@@ -117,11 +117,11 @@ public class EntryMain {
         if (fillManually)
             return true;
 
-        if (getKanji() == null || getKanji().length()>1 || !CJKUtils.isAllKanji(getKanji(),false))
-        if (getRTK2Frame() < 1) {
-            log.error("invalid RTK2 frame: " + getRTK2Frame());
-            ret = false;
-        }
+        if (getKanji() == null || getKanji().length() > 1 || !CJKUtils.isAllKanji(getKanji(), false))
+            if (getRTK2Frame() < 1) {
+                log.error("invalid RTK2 frame: " + getRTK2Frame());
+                ret = false;
+            }
         if (capitolo == null || capitolo.length() < 4) {
             log.error("capitolo invalid : " + getCapitolo());
             ret = false;
@@ -446,40 +446,38 @@ public class EntryMain {
 
     /**
      * pass to null rows not to process
-     * @return
+     * @return 1 ok (primo passo) ma non completa
+     * 2 completa e valida
      */
-    boolean processAnomalyEntry(Element table, String filename, int tableNr, int scanNr, int previousFrame, boolean xpageTableCompleting) {
+    int processAnomalyEntry(Element table) {
         boolean ret = true;
         String tableID = table.cssSelector();
         Elements rows = table.select(Defs.rowsSelector);
-        int fileNr = Utils.nrFromFName(filename);
 
-        if (tableNr == 185) {
-            if (fileNr == 102) {
-                if (!xpageTableCompleting) {
+        if (epub.getPreviousRTK2Frame() == 184) {  // forse anche anomala
+            if (epub.getfNumber() == 102) {
+                if (epub.getPass() == 0) {
                     Element td = rows.get(1).select("td").get(0);
                     String tmp = td.text();
                     setRTK2Frame(tmp);
+                    return 1;
                 } else {
                     log.error("should not be completing");
                     System.exit(1);
                 }
-            } else if (fileNr == 103) {
-                if (xpageTableCompleting) {
+            } else if (epub.getfNumber() == 103) {
+                if (epub.getPass() == 1) {
                     setCompKanj(rows.get(0).select("td").get(0).text().trim());
                     setCompReading(rows.get(0).select("td").get(1).text().trim());
                     setCompMean(rows.get(0).select("td").get(2).text().trim());
+                    return 2;
                 } else {
                     log.error("");
                 }
             }
-        } else if (tableNr == 317) {
-            if (fileNr == 103) {
-            } else if (fileNr == 104) {
-            }
-        } else if (tableNr == 446) {
-            if (fileNr == 104) {
-                if (!xpageTableCompleting) {
+        } else if (epub.getPreviousRTK2Frame() == 317) { // normale, splittata
+            if (epub.getfNumber() == 104) {
+                if (epub.getPass() == 0) {
                     setCompReading(rows.get(1).select("td").get(2).text());
                     setCompKanj(rows.get(1).select("td").get(1).text());
                     setRTK2Frame(rows.get(1).select("td").get(0).text());
@@ -488,15 +486,33 @@ public class EntryMain {
                     log.error("should not be completing");
                     System.exit(1);
                 }
-            } else if (fileNr == 105) {
-                if (xpageTableCompleting) {
+            } else if (epub.getfNumber() == 105) {
+                if (epub.getPass() == 1) {
                     setCompMean(rows.get(0).select("td").get(0).text());
                 } else {
                     log.error("");
                 }
             }
-        } else if (tableNr == 78 && fileNr == 202) {
-            if (!xpageTableCompleting) {
+        } else if (epub.getPreviousRTK2Frame() == 445) {
+            if (epub.getfNumber() == 104) {
+                if (epub.getPass() == 0) {
+                    setCompReading(rows.get(1).select("td").get(2).text());
+                    setCompKanj(rows.get(1).select("td").get(1).text());
+                    setRTK2Frame(rows.get(1).select("td").get(0).text());
+                    // setRTK2Frame(tmp);
+                } else {
+                    log.error("should not be completing");
+                    System.exit(1);
+                }
+            } else if (epub.getfNumber() == 105) {
+                if (epub.getPass() == 1) {
+                    setCompMean(rows.get(0).select("td").get(0).text());
+                } else {
+                    log.error("");
+                }
+            }
+        } else if (epub.getCurTableNr()== 740 && epub.getfNumber() == 202) {
+            if (epub.getPass() == 0) {
                 // --- riga kanji ---
                 setKanji(rows.get(0).select("td").get(1).text());
                 setReadings(rows.get(0).select("td").get(3).text());
@@ -507,26 +523,26 @@ public class EntryMain {
                 log.error("should not be completing");
                 System.exit(1);
             }
-        } else if (tableNr == 256) {
-            if (fileNr == 602) {
-                assert (!xpageTableCompleting);
+        } else if (epub.getCurTableNr() == 256) {
+            if (epub.getfNumber() == 602) {
+                assert (epub.getPass() == 0);
                 // --- riga kanji ---
                 setReadings2(rows.get(1).select("td").get(2).text());
                 setKanji2(rows.get(1).select("td").get(0).text());
                 // --- riga RFrame ----
                 // impostata correttamente
-            } else if (fileNr == 603) {
-                assert (!xpageTableCompleting);
+            } else if (epub.getfNumber() == 603) {
+                assert (epub.getPass() == 0);
                 setRTK1Frame2(rows.get(0).select("td").get(0).text());
                 setLink2("");
                 setComment("");
             }
         } else {
-            log.error(fileNr + " " + tableNr);
+            log.error(epub.getfNumber() + " " + epub.getCurTableNr());
             ret = false;
         }
 
-        return ret;
+        return 0;
     }
 
     public boolean processCellTable(Element td, int fileNr, int tableNr, int cellNr) {

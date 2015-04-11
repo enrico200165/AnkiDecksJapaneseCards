@@ -6,10 +6,10 @@ import org.jsoup.select.Elements;
 
 public class FilesTablesF701Chap11 implements IPage {
 
-    FilesTablesF701Chap11(EPUB_main epubPar, EntryMain m) {
+    FilesTablesF701Chap11(EPUB_main epubPar) {
         this.epub = epubPar;
         clearRows();
-
+        
     }
 
     void clearRows() {

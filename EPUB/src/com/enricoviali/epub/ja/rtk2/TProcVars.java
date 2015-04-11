@@ -29,5 +29,6 @@ public class TProcVars {
     Element CommentRow;
     
     int nrNonEmptyRows;
-    int nrRcgndRows;    
+    int nrRcgndRows;
+    int pass;
 }

@@ -16,7 +16,6 @@ import org.jsoup.select.Elements;
 public class EPUB_main {
 
     EPUB_main() {
-        me = new EntryMain(this);
         reset();
     }
 
@@ -29,9 +28,9 @@ public class EPUB_main {
         previousTableFile = "";
         setPreviousRTK2Frame(0);
 
-        pageMainType = new FilesTablesMainType(this, me);
-        pageF201Chap4 = new FilesTablesNoCNRead_F201Chap04(this, me);
-        pageF701Chap11 = new FilesTablesF701Chap11(this, me);
+        pageMainType = new FilesTablesMainType(this/*,me*/);
+        pageF201Chap4 = new FilesTablesNoCNRead_F201Chap04(this);
+        pageF701Chap11 = new FilesTablesF701Chap11(this);
 
         tableF201Chap4 = new TableF201Chap4();
     }
@@ -47,6 +46,26 @@ public class EPUB_main {
             }
         }
         return filesList;
+    }
+
+    IPage selectParser(int fnumber) {
+        if (fNumber < 201) {
+            return pageMainType;
+        }
+        if (fNumber == 201) {
+            return pageF201Chap4;
+        }
+        if (fNumber == 202) {
+            return pageMainType;
+        }
+        if (fNumber == 701) {
+            return pageF701Chap11;
+        }
+        if (fNumber >= 800) {
+            log.error("maggiore di 800");
+            return null;
+        }
+        return null;
     }
 
     public void processFiles() {
@@ -66,19 +85,7 @@ public class EPUB_main {
             // log.error(fNumber+ " " +log.info(fileEntry.getName()());
             Document ePage = parseFile(fileEntry);
 
-            if (fNumber == 201) {
-                pageParser = pageF201Chap4;
-            }
-            if (fNumber == 202) {
-                pageParser = pageMainType;
-            }
-            if (fNumber == 701) {
-                pageParser = pageF701Chap11;
-            }
-            if (fNumber >= 800) {
-                log.error("maggiore di 800");
-                break;
-            }
+            pageParser = selectParser(fNumber);
             pageParser.parseFiles(fNumber, ePage, fileEntry.getName());
 
             setPreviousTableFile(fileEntry.getName());
@@ -86,7 +93,6 @@ public class EPUB_main {
             System.gc();
         }
         log.info("================= normale uscita =======================");
-
     }
 
     /**
@@ -160,6 +166,16 @@ public class EPUB_main {
     }
 
 
+    boolean finalizeMainEntry(Element table, EntryMain mEntry) {
+        addToMainEntries(mEntry);
+        tablesScannedIncrOK();
+        setPreviousTableID(table.cssSelector());
+        setPreviousTableFile(getCurTableFile());
+        setPreviousRTK2Frame(mEntry.getRTK2Frame());
+        log.info(getfNumber() + " " + table.cssSelector()+ "last-good/probably-prev: " + getPreviousRTK2Frame());
+        return true;
+    }
+    
     // elementi di lavoro, dovrebbero essere variabili locali ma per gestire le
     // tabelle spezzate su due file devo mantener i valori
 
@@ -262,7 +278,6 @@ public class EPUB_main {
         this.curTableFile = curTableFile;
     }
 
-
     public int getfNumber() {
         return fNumber;
     }
@@ -271,8 +286,21 @@ public class EPUB_main {
         this.fNumber = fNumber;
     }
 
+    public int getPass() {
+        return pass;
+    }
 
-    EntryMain                              me;
+    public void passIncr() {
+        this.pass++;
+    }
+
+    public void passReset() {
+        this.pass = 0;
+    }
+
+    
+    
+    int                                    pass;
 
     IPage                                  pageMainType;
     FilesTablesNoCNRead_F201Chap04         pageF201Chap4;

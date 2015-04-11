@@ -11,11 +11,10 @@ import org.jsoup.select.Elements;
 
 public class FilesTablesMainType implements IPage {
 
-    FilesTablesMainType(EPUB_main epubPar, EntryMain m) {
+    FilesTablesMainType(EPUB_main epubPar) {
         this.epub = epubPar;
         workRows = new Elements();
         clearRows();
-        mEntry = m;
         tProcVars = new TProcVars();
     }
 
@@ -63,7 +62,6 @@ public class FilesTablesMainType implements IPage {
         }
 
         // log.info("fileNr: " + fileNr);
-
         Elements tablesInPage = page.select(tablesSel);
         for (Element table : tablesInPage) {
             int tableIDNr = Utils.tableNr(table.cssSelector());
@@ -77,20 +75,53 @@ public class FilesTablesMainType implements IPage {
             // log.info(table.cssSelector()+ " "+epub.getCurTableNr());
             if (epub.getCurTableNr() == 185)
                 log.debug("");
+            
 
-            if (processTable(table)) {
-                epub.addToMainEntries(mEntry);
-                epub.tablesScannedIncrOK();
-                epub.setPreviousTableID(table.cssSelector());
-                epub.setPreviousTableFile(filename);
-                epub.setPreviousRTK2Frame(mEntry.getRTK2Frame());
-                log.info("prev: "+epub.getPreviousRTK2Frame());
-            } else {
-                log.debug(filename + " " + table.cssSelector() + "errore tabella ");
-                if (!processAnomaly(table)) {
-                    log.debug("");
+            switch (tableType(epub.getPreviousRTK2Frame())) {
+                case Defs.TAB_STANDARD: {
+                    EntryMain mEntry = new EntryMain(this.epub);
+                    this.mEntry = mEntry;
+                    if (processTable(table)) {
+                        epub.finalizeMainEntry(table, mEntry);
+                    } else {
+                        log.error(filename + " " + table.cssSelector() + " errore tabella ");
+                        if (!processAnomaly(table)) {
+                            log.error("");
+                            System.exit(1);
+                        }
+                    }
+                    break;
                 }
+                case Defs.TAB_ANOMALY:
+                case Defs.TAB_ANOMALY_SPLIT:
+                case Defs.TAB_STD_SPLIT: {
+                    if (epub.getPass() <= 1) {
+                        int ret = mEntry.processAnomalyEntry(table);
+                        epub.passIncr();
+                        switch (ret) {
+                            case 0: {
+                                log.error("");
+                                break;
+                            }
+                            case 1: {
+                                break;
+                            }
+                            case 2: {
+                                epub.finalizeMainEntry(table, mEntry);
+                                epub.passReset();
+                                break;
+                            }
+                        }
+                    } else {
+                        log.error("");
+                    }
+                    break;
+                }
+
+                default:
+                    log.error("break");
             }
+
         }
     }
 
@@ -154,69 +185,49 @@ public class FilesTablesMainType implements IPage {
         preProcOK = preProcessRows(epub.getfNumber(), table, epub.getCurTableFile(), epub.getTablesScanned(), this.tProcVars);
 
         if (preProcOK) {
-            procOK = mEntry.processStandardEntry(tProcVars, epub.getCurTableFile(), epub.getCurTableNr(), epub.getTablesScanned(), tProcVars.nrNonEmptyRows);
+            procOK = mEntry.processStandardEntry(tProcVars, epub.getCurTableFile(), epub.getCurTableNr(), epub.getTablesScanned(),
+                    tProcVars.nrNonEmptyRows);
         }
         if (procOK) {
             finalizeOK = finalizeEntry(epub.getCurTableFile(), table, mEntry);
         }
 
         if (finalizeOK) {
-            checksOK = checkFrNr(epub,epub.getPreviousRTK2Frame(),mEntry.getRTK2Frame());
+            checksOK = checkFrNr(epub, epub.getPreviousRTK2Frame(), mEntry.getRTK2Frame());
         }
 
         if (checksOK) {
             return true;
         } else {
-            log.debug("standard processing failed: " + epub.getCurTableFile()  + " " + table.cssSelector() 
-                    + " "+ epub.getPreviousRTK2Frame() 
+            log.debug("standard processing failed: " + epub.getCurTableFile() + " " + table.cssSelector()
+                    + " " + epub.getPreviousRTK2Frame()
                     + " curr= " + mEntry.getRTK2Frame()
-                     + " " + " tabella \n" + table);
+                    + " " + " tabella \n" + table);
             return false;
         }
     }
 
-    boolean checkFrNr(EPUB_main epub, int prevFrNr,int curFrNr) {
+    boolean checkFrNr(EPUB_main epub, int prevFrNr, int curFrNr) {
         boolean ret = true;
-        
-        if (prevFrNr == 762 && curFrNr == 1 && epub.getfNumber() == 101 )
+
+        if (prevFrNr == 762 && curFrNr == 1 && epub.getfNumber() == 101)
             return true;
-        
+
         ret = ret && (prevFrNr + 1 == curFrNr);
         return ret;
     }
-    
-    
+
     boolean processAnomaly(Element table) {
-        
-        log.error("procesAnomaly should manage: \n"+
-        "current File=" +epub.getCurTableFile()
-        + " cur file nr="+epub.getfNumber()
-        + " tables scanned="+ epub.getTablesScanned()
-        
-        + " pre table ID="+ epub.getPreviousTableID() 
-        + " prev RTK2 frame="+epub.getPreviousRTK2Frame()
-        );
-        
-        /*
-            
 
-                // ---------------------- elaborazione tabella -------------------------
-                mEntry.processAnomalyEntry(table, filename, epub.getCurTableNr(), scanNr, tProcVars.nrNonEmptyRows, xpageTableCompleting);
-                // just to set breakpoints
-                if ((((fileNr != -1) || (fileNr != -1)) && epub.getCurTableNr() == 185)
-                        || (epub.getCurTableNr() == 186)) {
-                    // log.info("breakpoint");
-                }
-                if (mEntry.manualTable(fileNr, epub.getCurTableNr())) {
-                    mEntry.setFillManually(epub.getRTK2FrameFromTable(table));
-                } else {
-                }
-                // --- here things should be ok ---
+        log.error("procesAnomaly should manage: \n" +
+                "current File=" + epub.getCurTableFile()
+                + " cur file nr=" + epub.getfNumber()
+                + " tables scanned=" + epub.getTablesScanned()
 
-                // --- --- ---- controlli  --- ---- ---- ----
+                + " pre table ID=" + epub.getPreviousTableID()
+                + " prev RTK2 frame=" + epub.getPreviousRTK2Frame()
+                );
 
-
-          */
         return false;
     }
 
@@ -248,6 +259,30 @@ public class FilesTablesMainType implements IPage {
             }
         }
         return false;
+    }
+
+    int tableType(int preRTK2Fr) {
+
+        switch (preRTK2Fr) {
+            case 184: {
+                return Defs.TAB_STD_SPLIT;
+            }
+            case 316: {
+                return Defs.TAB_STD_SPLIT;
+            }
+
+            default: {
+                return Defs.TAB_STANDARD;
+            }
+        }
+
+        /*
+        TAB_ANOMALY= 1;
+        TAB_STD_SPLIT= 2;
+        TAB_ANOMALY_SPLIT= 3;
+        TAB_UNKN= 9;
+        */
+
     }
 
 

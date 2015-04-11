@@ -2,5 +2,12 @@ package com.enricoviali.epub.ja.rtk2;
 
 public class Defs {
 
+    static final int TAB_STANDARD = 0;
+    static final int TAB_ANOMALY= 1;
+    static final int TAB_STD_SPLIT= 2;
+    static final int TAB_ANOMALY_SPLIT= 3;
+    static final int TAB_UNKN= 9;
+    
+    
     public final static String rowsSelector = ".calibre8" + " " + ".calibre9";
 }
