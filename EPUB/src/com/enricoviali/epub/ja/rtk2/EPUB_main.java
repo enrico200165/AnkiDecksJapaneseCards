@@ -16,6 +16,7 @@ import org.jsoup.select.Elements;
 public class EPUB_main {
 
     EPUB_main() {
+        me = new EntryMain(this);
         reset();
     }
 
@@ -28,9 +29,9 @@ public class EPUB_main {
         previousTableFile = "";
         setPreviousRTK2Frame(0);
 
-        pageMainType = new PageMainType(this);
-        pageF201Chap4 = new PageNoCNRead_F201Chap04(this);
-        pageF701Chap11 = new PageF701Chap11(this);
+        pageMainType = new FilesTablesMainType(this, me);
+        pageF201Chap4 = new FilesTablesNoCNRead_F201Chap04(this, me);
+        pageF701Chap11 = new FilesTablesF701Chap11(this, me);
 
         tableF201Chap4 = new TableF201Chap4();
     }
@@ -51,15 +52,17 @@ public class EPUB_main {
     public void processFiles() {
         ArrayList<File> filesList = listFilesInFolder(new File("./data_in/rtk2/text/"), false);
 
-        int fNumber;
+        fNumber = 0;
         tablesScanned = 0;
         tablesScannedOK = 0;
 
         setPreviousTableID("");
+        setCurTableFile("");
 
         IPage pageParser = pageMainType;
         for (File fileEntry : filesList) {
-            fNumber = Utils.nrFromFName(fileEntry.getName());
+            setCurTableFile(fileEntry.getName());
+            fNumber = Utils.nrFromFName(getCurTableFile());
             // log.error(fNumber+ " " +log.info(fileEntry.getName()());
             Document ePage = parseFile(fileEntry);
 
@@ -76,7 +79,7 @@ public class EPUB_main {
                 log.error("maggiore di 800");
                 break;
             }
-            pageParser.parsePage(fNumber, ePage, fileEntry.getName());
+            pageParser.parseFiles(fNumber, ePage, fileEntry.getName());
 
             setPreviousTableFile(fileEntry.getName());
             fileEntry = null;
@@ -125,8 +128,8 @@ public class EPUB_main {
         /* possibile trovare più elementi della forma r-  ex. tabella di esempio
          * l'ultimo dovrebbe essere quello giusto (non sicuro)
         */
-        
-        for (int i = table.select("td").size()-1; i >= 0;i--) {
+
+        for (int i = table.select("td").size() - 1; i >= 0; i--) {
             Element e = table.select("td").get(i);
             if (e.text().trim().length() < 7) {
                 Matcher matcher = pattern.matcher(e.text());
@@ -194,8 +197,7 @@ public class EPUB_main {
     public int getCurTableNr() {
         return curTableNr;
     }
-    
-    
+
     public void tablesScannedIncrOK() {
         this.tablesScannedOK++;
     }
@@ -222,7 +224,7 @@ public class EPUB_main {
                 && !(previousRTK2Frame == 762 && previousFrame == 1))
             log.warn("setting RTK2Frame inconsistent: previous value: " + previousRTK2Frame + " new value: " + previousFrame);
         this.previousRTK2Frame = previousFrame;
-        
+
         // log.info("previousRTK2Frame: "+previousRTK2Frame);
         if (previousRTK2Frame == 622)
             log.debug("just to break");
@@ -247,20 +249,41 @@ public class EPUB_main {
     public int getTablesScannedOK() {
         return tablesScannedOK;
     }
-    
+
     public void setTablesScannedOK(int tablesScannedOK) {
         this.tablesScannedOK = tablesScannedOK;
     }
-    
+
+    public String getCurTableFile() {
+        return curTableFile;
+    }
+
+    public void setCurTableFile(String curTableFile) {
+        this.curTableFile = curTableFile;
+    }
+
+
+    public int getfNumber() {
+        return fNumber;
+    }
+
+    public void setfNumber(int fNumber) {
+        this.fNumber = fNumber;
+    }
+
+
+    EntryMain                              me;
 
     IPage                                  pageMainType;
-    PageNoCNRead_F201Chap04                pageF201Chap4;
-    PageF701Chap11                         pageF701Chap11;
+    FilesTablesNoCNRead_F201Chap04         pageF201Chap4;
+    FilesTablesF701Chap11                  pageF701Chap11;
 
     TableF201Chap4                         tableF201Chap4;
 
     String                                 previousTableID;
     String                                 previousTableFile;
+    String                                 curTableFile;
+    int                                    fNumber;
 
     int                                    curTableNr;
     int                                    tablesScanned;

@@ -4,9 +4,9 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-public class PageF701Chap11 implements IPage {
+public class FilesTablesF701Chap11 implements IPage {
 
-    PageF701Chap11(EPUB_main epubPar) {
+    FilesTablesF701Chap11(EPUB_main epubPar, EntryMain m) {
         this.epub = epubPar;
         clearRows();
 
@@ -24,7 +24,7 @@ public class PageF701Chap11 implements IPage {
         return skip;
     }
 
-    public void parsePage(int fileNr, Document page, String filename) {
+    public void parseFiles(int fileNr, Document page, String filename) {
         String tablesSel = "table";
 
         if (fileNr != 701) {
@@ -38,7 +38,7 @@ public class PageF701Chap11 implements IPage {
             epub.tablesScannedIncr();
             epub.setCurTableNr(Utils.tableNr(table.cssSelector()));
 
-            if (processTable(fileNr, table, filename, epub.getTablesScanned())) {
+            if (processTable(table)) {
                 epub.tablesScannedIncrOK();
             } else {
                 log.error("");
@@ -48,14 +48,14 @@ public class PageF701Chap11 implements IPage {
         }
     }
 
-    public boolean processTable(int fileNr, Element table, String filename, int scanNr) {
+    public boolean processTable(Element table) {
         final String entrySelector = ".generated-style-3-override6";
 
         
-        if (tableToSkip(epub.getCurTableNr(), fileNr)) {
+        if (tableToSkip(epub.getCurTableNr(), epub.getfNumber())) {
             // crea entry co contenuti dummy e riconscibile per successiva correzione manuale
             EntryMain mEntry = new EntryMain(this.epub); // entry to be added
-            String msg = filename + " tableID=" + table.cssSelector() + " previousFrame=" + epub.getPreviousRTK2Frame() + " gestire a mano";
+            String msg = epub.getCurTableFile() + " tableID=" + table.cssSelector() + " previousFrame=" + epub.getPreviousRTK2Frame() + " gestire a mano";
             log.error(msg);
             mEntry.setKanji("狭*");
             mEntry.setComment(msg);
@@ -67,7 +67,7 @@ public class PageF701Chap11 implements IPage {
         // mEntry.setTableID(table.cssSelector());
 
         if (epub.getPreviousTableID().equals(table.cssSelector())) {
-            log.warn("same table: " + epub.getPreviousTableID() + " \nprevious: " + epub.getPreviousTableFile() + " \nfile    : " + filename);
+            log.warn("same table: " + epub.getPreviousTableID() + " \nprevious: " + epub.getPreviousTableFile() + " \nfile    : " + epub.getCurTableFile());
             return true;
         }
 
@@ -98,13 +98,13 @@ public class PageF701Chap11 implements IPage {
             return true;
         }
         if (nrNonEmptyRows == 2) {
-            mEntry = processStandardEntry(table, tableRows[0], tableRows[1], tableRows[2], filename, epub.getCurTableNr(), scanNr, nrNonEmptyRows);
+            mEntry = processStandardEntry(table, tableRows[0], tableRows[1], tableRows[2], epub.getCurTableFile(), epub.getCurTableNr(), epub.getTablesScanned(), nrNonEmptyRows);
         }
         if (nrNonEmptyRows == 3) {
             boolean terzaCommento = (nrNonEmptyRows == 2 && tableRows[2].select("td").size() <= 3);
             if (terzaCommento) {
                 log.info("comment: " + tableRows[2].text());
-                mEntry = processStandardEntry(table, tableRows[0], tableRows[1], tableRows[2], filename, epub.getCurTableNr(), scanNr, nrNonEmptyRows);
+                mEntry = processStandardEntry(table, tableRows[0], tableRows[1], tableRows[2], epub.getCurTableFile(), epub.getCurTableNr(), epub.getTablesScanned(), nrNonEmptyRows);
             } else {
                 log.error("");
                 return true;
@@ -127,7 +127,7 @@ public class PageF701Chap11 implements IPage {
             // Utils.esco("discontinuità rFrames");
         }
 
-        if (mEntry.isValid()) {
+        if (mEntry.isValid(0)) {
             epub.curTableNrInc();
             epub.addToMainEntries(mEntry);
             epub.setPreviousRTK2Frame(mEntry.getRTK2Frame());
@@ -137,13 +137,13 @@ public class PageF701Chap11 implements IPage {
         }
 
         if (mEntry.getRTK2Frame() != epub.getCurTableNr()) {
-                log.warn("file: " + filename + " scollamento contatory: rFrame=" + mEntry.getRTK2Frame() + " tablesCounter=" + epub.getCurTableNr() + " selector: " + table.cssSelector());
+                log.warn("file: " + epub.getCurTableFile() + " scollamento contatory: rFrame=" + mEntry.getRTK2Frame() + " tablesCounter=" + epub.getCurTableNr() + " selector: " + table.cssSelector());
         }
 
         // log.info(mEntry.toString());
 
         epub.setPreviousTableID(table.cssSelector());
-        epub.setPreviousTableFile(filename);
+        epub.setPreviousTableFile(epub.getCurTableFile());
         return true;
     }
 
@@ -166,6 +166,6 @@ public class PageF701Chap11 implements IPage {
     EPUB_main                              epub;
     Element[]                              tableRows;
 
-    private static org.apache.log4j.Logger log = Logger.getLogger(PageF701Chap11.class);
+    private static org.apache.log4j.Logger log = Logger.getLogger(FilesTablesF701Chap11.class);
 
 }

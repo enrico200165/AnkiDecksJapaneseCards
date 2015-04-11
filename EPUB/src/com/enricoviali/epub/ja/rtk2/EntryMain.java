@@ -7,6 +7,8 @@ import org.apache.log4j.Logger;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import com.enrico_viali.jacn.common.CJKUtils;
+
 public class EntryMain {
 
     public EntryMain(EPUB_main epubPar) {
@@ -109,20 +111,23 @@ public class EntryMain {
         return "error";
     }
 
-    public boolean isValid() {
+    public boolean isValid(int type) {
         boolean ret = true;
 
         if (fillManually)
             return true;
 
+        if (getKanji() == null || getKanji().length()>1 || !CJKUtils.isAllKanji(getKanji(),false))
         if (getRTK2Frame() < 1) {
             log.error("invalid RTK2 frame: " + getRTK2Frame());
             ret = false;
         }
-
         if (capitolo == null || capitolo.length() < 4) {
             log.error("capitolo invalid : " + getCapitolo());
             ret = false;
+        }
+        if (type == 1) { // no chinese reading
+            return true;
         }
 
         if (!ret) {
@@ -412,26 +417,25 @@ public class EntryMain {
      * Dovrebbe elaborare solo i casi normali, e fallire se manca il minimo
      * @return
      */
-    boolean processStandardEntry(Element table, Element rigaKanji1, Element rigaKanji2, Element rigaRFrame, Element rigaCommento,
-            String filename, int tableNr, int scanNr, int previousFrame) {
+    boolean processStandardEntry(TProcVars pv, String filename, int tableNr, int scanNr, int previousFrame) {
         boolean ret = true;
-        String tableID = table.cssSelector();
+        String tableID = pv.t.cssSelector();
         int fileNr = Utils.nrFromFName(filename);
 
-        if (!processRigaKanji1(true, fileNr, rigaKanji1, filename, table.cssSelector(), tableNr, scanNr, epub.getCurTableNr()))
+        if (!processRigaKanji1(true, fileNr, pv.kanji1Row, filename, pv.t.cssSelector(), tableNr, scanNr, epub.getCurTableNr()))
             ret = false;
-        if (!processRigaKanji2(true, fileNr, rigaKanji2, filename, table.cssSelector(), tableNr, scanNr, epub.getCurTableNr())) {
+        if (!processRigaKanji2(true, fileNr, pv.kanji2Row, filename, pv.t.cssSelector(), tableNr, scanNr, epub.getCurTableNr())) {
 
         }
-        if (!processRigaRFrame(true, rigaRFrame, filename, table.cssSelector(), tableNr, scanNr, epub.getCurTableNr()))
+        if (!processRigaRFrame(true, pv.RFrameRow, filename, pv.t.cssSelector(), tableNr, scanNr, epub.getCurTableNr()))
             ret = false;
-        if (!processRigaComment(true, rigaCommento, filename, table.cssSelector(), tableNr, scanNr, epub.getCurTableNr())) {
+        if (!processRigaComment(true, pv.CommentRow, filename, pv.t.cssSelector(), tableNr, scanNr, epub.getCurTableNr())) {
         }
 
         if (ret) {
         } else {
             if (!splitTable(fileNr, tableNr)) {
-                log.error(filename + " tableNr: " + tableNr+ " failed standard processing");
+                log.error(filename + " tableNr: " + tableNr + " failed standard processing");
                 ret = false;
             } else {
                 log.debug("just for a brakpoint " + filename + " tableNr: " + tableNr);

@@ -5,8 +5,8 @@ import org.jsoup.nodes.Element;
 
 public interface IPage {
 
-    public abstract void parsePage(int fileNr, Document page, String filename);
+    public abstract void parseFiles(int fileNr, Document page, String filename);
 
-    public abstract boolean processTable(int fileNr, Element table, String filename, int scanNr);
+    public abstract boolean processTable(Element table);
 
 }
