@@ -49,22 +49,21 @@ public class EPUB_main {
     }
 
     IPage selectParser(int fnumber) {
+
         if (fNumber < 201) {
             return pageMainType;
         }
         if (fNumber == 201) {
             return pageF201Chap4;
         }
-        if (fNumber == 202) {
+
+        if (202 <= fNumber && fnumber < 700) {
             return pageMainType;
         }
-        if (fNumber == 701) {
+        if (700 <= fNumber) {
             return pageF701Chap11;
         }
-        if (fNumber >= 800) {
-            log.error("maggiore di 800");
-            return null;
-        }
+        log.error("maggiore di 800");
         return null;
     }
 
@@ -165,17 +164,17 @@ public class EPUB_main {
         return -2;
     }
 
-
     boolean finalizeMainEntry(Element table, EntryMain mEntry) {
         addToMainEntries(mEntry);
         tablesScannedIncrOK();
         setPreviousTableID(table.cssSelector());
         setPreviousTableFile(getCurTableFile());
         setPreviousRTK2Frame(mEntry.getRTK2Frame());
-        log.info(getfNumber() + " " + table.cssSelector()+ "last-good/probably-prev: " + getPreviousRTK2Frame());
+        log.info(getfNumber() + " " + table.cssSelector() + " last-good/probably-prev: " + getPreviousRTK2Frame());
         return true;
     }
-    
+
+
     // elementi di lavoro, dovrebbero essere variabili locali ma per gestire le
     // tabelle spezzate su due file devo mantener i valori
 
@@ -298,8 +297,15 @@ public class EPUB_main {
         this.pass = 0;
     }
 
-    
-    
+    public EntryMain getmEntry() {
+        return mEntry;
+    }
+
+    public void setmEntry(EntryMain mEntry) {
+        this.mEntry = mEntry;
+    }
+
+
     int                                    pass;
 
     IPage                                  pageMainType;
@@ -307,6 +313,8 @@ public class EPUB_main {
     FilesTablesF701Chap11                  pageF701Chap11;
 
     TableF201Chap4                         tableF201Chap4;
+
+    EntryMain                              mEntry;
 
     String                                 previousTableID;
     String                                 previousTableFile;

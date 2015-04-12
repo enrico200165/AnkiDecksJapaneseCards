@@ -153,15 +153,32 @@ public class FilesTablesF701Chap11 implements IPage {
         String tableID = table.cssSelector();
         int fileNr = Utils.nrFromFName(filename);
 
-        ret = ret && mEntry.processRigaKanji1(true,fileNr, tableRows[0], filename, table.cssSelector(), tableNr, scanNr, epub.getCurTableNr());
-        ret = ret && mEntry.processRigaRFrame(true,tableRows[1], filename, table.cssSelector(), tableNr, scanNr, epub.getCurTableNr());
+        ret = ret && mEntry.processRigaKanji1(true,fileNr, tableRows[0]);
+        ret = ret && mEntry.processRigaRFrame(true,tableRows[1]);
+
+        /*
         if (tableRows[2] != null)
             ret = ret && mEntry.processRiga3(tableRows[2], filename, table.cssSelector(), tableNr, scanNr, epub.getCurTableNr());
+       
+        */
         if (ret)
             return mEntry;
         else
             return null;
     }
+    
+    boolean processRiga3(Element riga3, String filename, String tableID, int tableNr, int scanNr, int tablesCounter) {
+
+        Elements TDs = riga3.select("td");
+        int pos = TDs.size();
+        Element cur;
+
+        pos--; // usually 3
+        cur = TDs.get(pos);
+
+        return true;
+    }
+
 
     EPUB_main                              epub;
     Element[]                              tableRows;

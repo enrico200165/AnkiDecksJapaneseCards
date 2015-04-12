@@ -46,9 +46,49 @@ public class FilesTablesMainType implements IPage {
                
         */
 
+        if (skip) {
+            log.error("skipped "+epub.getCurTableFile()+ " "+ table.cssSelector()+" last good RTK2: "+epub.getPreviousRTK2Frame());
+            log.debug("");
+        }
+        
         return skip;
     }
 
+    int tableType(int preRTK2Fr) {
+        switch (preRTK2Fr) {
+            case 184: {
+                return Defs.TAB_STD_SPLIT;
+            }
+            case 315: {
+                return Defs.TAB_STD_SPLIT;
+            }
+            case 444: {
+                return Defs.TAB_ANOMALY_SPLIT;
+            }
+            case 880: {
+                return Defs.TAB_STD_SPLIT;
+            }
+            case 1137: {
+                return Defs.TAB_ANOMALY_SPLIT;
+            }
+
+            default: {
+                return Defs.TAB_STANDARD;
+            }
+        }
+
+        /*
+        TAB_ANOMALY= 1;
+        TAB_STD_SPLIT= 2;
+        TAB_ANOMALY_SPLIT= 3;
+        TAB_UNKN= 9;
+        */
+
+    }
+
+
+    
+    
     /* (non-Javadoc)
      * @see com.enricoviali.epub.ja.rtk2.IPage#parsePage(int, org.jsoup.nodes.Document, java.lang.String)
      */
@@ -73,14 +113,14 @@ public class FilesTablesMainType implements IPage {
             epub.tablesScannedIncr();
             epub.setCurTableNr(Utils.tableNr(table.cssSelector()));
             // log.info(table.cssSelector()+ " "+epub.getCurTableNr());
-            if (epub.getCurTableNr() == 185)
+            if (epub.getCurTableNr() == 317)
                 log.debug("");
             
 
             switch (tableType(epub.getPreviousRTK2Frame())) {
                 case Defs.TAB_STANDARD: {
                     EntryMain mEntry = new EntryMain(this.epub);
-                    this.mEntry = mEntry;
+                    epub.setmEntry(mEntry);
                     if (processTable(table)) {
                         epub.finalizeMainEntry(table, mEntry);
                     } else {
@@ -95,8 +135,12 @@ public class FilesTablesMainType implements IPage {
                 case Defs.TAB_ANOMALY:
                 case Defs.TAB_ANOMALY_SPLIT:
                 case Defs.TAB_STD_SPLIT: {
+                    if (epub.getPass() == 0) {
+                        EntryMain mEntry = new EntryMain(this.epub);
+                        epub.setmEntry(mEntry);                        
+                    }
                     if (epub.getPass() <= 1) {
-                        int ret = mEntry.processAnomalyEntry(table);
+                        int ret = epub.getmEntry().processAnomalyEntry(table);
                         epub.passIncr();
                         switch (ret) {
                             case 0: {
@@ -107,7 +151,7 @@ public class FilesTablesMainType implements IPage {
                                 break;
                             }
                             case 2: {
-                                epub.finalizeMainEntry(table, mEntry);
+                                epub.finalizeMainEntry(table, epub.getmEntry());
                                 epub.passReset();
                                 break;
                             }
@@ -140,7 +184,7 @@ public class FilesTablesMainType implements IPage {
             embeddedTable = workRows.get(i).select(wrongTableSel);
             if (embeddedTable.size() > 0) {
                 log.warn("skip row with embedded table not to pick it twice: " + table.cssSelector());
-                log.info("full table " + table.cssSelector() + ": \n" + table);
+                log.debug("full table " + table.cssSelector() + ": \n" + table);
                 continue;
             }
             // skip blanks
@@ -185,15 +229,15 @@ public class FilesTablesMainType implements IPage {
         preProcOK = preProcessRows(epub.getfNumber(), table, epub.getCurTableFile(), epub.getTablesScanned(), this.tProcVars);
 
         if (preProcOK) {
-            procOK = mEntry.processStandardEntry(tProcVars, epub.getCurTableFile(), epub.getCurTableNr(), epub.getTablesScanned(),
+            procOK = epub.getmEntry().processStandardEntry(tProcVars, epub.getCurTableFile(), epub.getCurTableNr(), epub.getTablesScanned(),
                     tProcVars.nrNonEmptyRows);
         }
         if (procOK) {
-            finalizeOK = finalizeEntry(epub.getCurTableFile(), table, mEntry);
+            finalizeOK = finalizeEntry(epub.getCurTableFile(), table, epub.getmEntry());
         }
 
         if (finalizeOK) {
-            checksOK = checkFrNr(epub, epub.getPreviousRTK2Frame(), mEntry.getRTK2Frame());
+            checksOK = checkFrNr(epub, epub.getPreviousRTK2Frame(), epub.getmEntry().getRTK2Frame());
         }
 
         if (checksOK) {
@@ -201,7 +245,7 @@ public class FilesTablesMainType implements IPage {
         } else {
             log.debug("standard processing failed: " + epub.getCurTableFile() + " " + table.cssSelector()
                     + " " + epub.getPreviousRTK2Frame()
-                    + " curr= " + mEntry.getRTK2Frame()
+                    + " curr= " + epub.getmEntry().getRTK2Frame()
                     + " " + " tabella \n" + table);
             return false;
         }
@@ -244,8 +288,8 @@ public class FilesTablesMainType implements IPage {
         if (e.getRTK2Frame() == 734)
             log.debug("");
 
-        mEntry.setCapitolo(mEntry.calculateCapitolo());
-        mEntry.setTableID(table.cssSelector());
+        epub.getmEntry().setCapitolo(epub.getmEntry().calculateCapitolo());
+        epub.getmEntry().setTableID(table.cssSelector());
 
         // --- if change of table we must write
         if (e != null) {
@@ -261,32 +305,7 @@ public class FilesTablesMainType implements IPage {
         return false;
     }
 
-    int tableType(int preRTK2Fr) {
 
-        switch (preRTK2Fr) {
-            case 184: {
-                return Defs.TAB_STD_SPLIT;
-            }
-            case 316: {
-                return Defs.TAB_STD_SPLIT;
-            }
-
-            default: {
-                return Defs.TAB_STANDARD;
-            }
-        }
-
-        /*
-        TAB_ANOMALY= 1;
-        TAB_STD_SPLIT= 2;
-        TAB_ANOMALY_SPLIT= 3;
-        TAB_UNKN= 9;
-        */
-
-    }
-
-
-    EntryMain                              mEntry;
     TProcVars                              tProcVars;
 
     boolean                                xpageTableCompleting;
