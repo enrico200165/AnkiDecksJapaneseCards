@@ -6,7 +6,7 @@
                 <enc:EncryptedData>
                     <enc:EncryptionMethod Algorithm="http://ns.adobe.com/pdf/enc#RC"/>
                     <enc:CipherData>
-                    <enc:CipherReference URI="fonts/00002.ttf"/>
+                    <enc:CipherReference URI="fonts/00001.ttf"/>
                     </enc:CipherData>
                 </enc:EncryptedData>
                 
@@ -14,7 +14,7 @@
                 <enc:EncryptedData>
                     <enc:EncryptionMethod Algorithm="http://ns.adobe.com/pdf/enc#RC"/>
                     <enc:CipherData>
-                    <enc:CipherReference URI="fonts/00001.ttf"/>
+                    <enc:CipherReference URI="fonts/00002.ttf"/>
                     </enc:CipherData>
                 </enc:EncryptedData>
                 

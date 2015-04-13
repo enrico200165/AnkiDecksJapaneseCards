@@ -71,7 +71,8 @@ public class FilesTablesMainType implements IPage {
             case 754: 
             case 760: 
             case 765: 
-            case 771: {
+            case 771: 
+            case 772: {
                 return Defs.TAB_ANOMALY;
             }
             case 880: {

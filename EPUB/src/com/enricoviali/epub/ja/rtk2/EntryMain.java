@@ -310,7 +310,7 @@ public class EntryMain {
         capitolo = calculateCapitolo();
     }
 
-    boolean processRigaRFrame(boolean overwrite, Element rigaRFrame) {
+    boolean processRigaRFrameCompo(boolean overwrite, Element rigaRFrame) {
 
         if (rigaRFrame == null)
             return false;
@@ -377,6 +377,75 @@ public class EntryMain {
         return true;
     }
 
+    
+    boolean processRigaCompo2(boolean overwrite, Element rigaCompo2) {
+
+        if (rigaCompo2 == null)
+            return false;
+
+        Elements TDs = rigaCompo2.select("td");
+        int pos = TDs.size();
+        Element cur;
+
+        // --- simply check size
+        Elements nonEmpty = new Elements();
+        for (Element e : TDs) {
+            if (e.text().length() > 0)
+                nonEmpty.add(e);
+        }
+        if (nonEmpty.size() < 3) {
+            if (!splitTable(Utils.nrFromFName(epub.getCurTableFile()), Utils.tableNr(tableID)))
+                log.warn(epub.getCurTableFile() + " " + epub.getCurTableNr() + " riga RFrame con elementi mancanti\n" + rigaCompo2.html());
+            return false;
+        }
+
+        // -- real processing
+
+        pos--; // usually 4
+
+        pos--; // usually 3
+        if (pos < 0) {
+            log.warn(epub.getCurTableFile() + " " + epub.getCurTableNr() + " negative pos");
+            return false;
+        }
+        if (overwrite || getCompMean() == null) {
+            cur = TDs.get(pos);
+            setCompMean(cur.text());
+        }
+
+        pos--; // usually 2
+        if (pos < 0) {
+            log.warn(epub.getCurTableFile() + " " + epub.getCurTableNr() + " negative pos");
+            return false;
+        }
+        if (overwrite || getCompReading() == null) {
+            cur = TDs.get(pos);
+            setCompReading(cur.text());
+        }
+
+        pos--; // usually 1
+        if (pos < 0) {
+            log.warn(epub.getCurTableFile() + " " + epub.getCurTableNr() + " negative pos");
+            return false;
+        }
+        if (overwrite || getCompKanj() == null) {
+            cur = TDs.get(pos);
+            setCompKanj(cur.text());
+        }
+
+        pos--; // usually 0
+        if (pos < 0) {
+            log.warn(epub.getCurTableFile() + " " + epub.getCurTableNr() + " negative pos");
+            return false;
+        }
+        if (overwrite || getRTK2Frame() == -1) {
+            Element RTK2FrameE = TDs.get(pos);
+            setRTK2Frame(RTK2FrameE.text());
+        }
+        return true;
+    }
+
+    
     boolean processRigaComment(boolean overwrite, Element rigaComm) {
 
         if (rigaComm == null)
@@ -421,7 +490,7 @@ public class EntryMain {
         if (!processRigaKanji2(true, pv.kanji2Row)) {
 
         }
-        if (!processRigaRFrame(true, pv.RFrameRow)) {
+        if (!processRigaRFrameCompo(true, pv.RFrameRow)) {
             ret = false;
         }
 
@@ -480,7 +549,7 @@ public class EntryMain {
                     processRigaKanji1(true, table.select("tr").first());
                     return 1;
                 } else if (epub.getfNumber() == 104) {
-                    processRigaRFrame(true, table.select("tr").first());
+                    processRigaRFrameCompo(true, table.select("tr").first());
                     return 2;
                 } else {
                     log.error("");
@@ -495,7 +564,7 @@ public class EntryMain {
                     processRigaKanji1(true, table.select("tr").first());
                     return 1;
                 } else if (epub.getfNumber() == 104) {
-                    processRigaRFrame(true, table.select("tr").first());
+                    processRigaRFrameCompo(true, table.select("tr").first());
                     return 2;
                 } else {
                     log.error("");
@@ -551,7 +620,8 @@ public class EntryMain {
             case 754: 
             case 760: 
             case 765: 
-            case 771: {
+            case 771: 
+            case 772: {
                 if (epub.getfNumber() == 202) {
                     adHocKanji1(table,false, 
                             table.select("tr").get(0).select("td").get(1).text(), // kanji 
@@ -559,7 +629,7 @@ public class EntryMain {
                             table.select("tr").get(0).select("td").get(3).text()/*reading*/, 
                             null /*lnkSel*/, 
                             table.select("tr").get(0).select("td").get(5).text()/*R1FrSel*/);
-                    processRigaRFrame(false, table.select("tr").get(1));
+                    processRigaRFrameCompo(false, table.select("tr").get(1));
                     return 2;
                 } else {
                     log.error("");
@@ -573,7 +643,7 @@ public class EntryMain {
                     processRigaKanji1(true,  table.select("tr").first());
                     return 1;
                 } else if (epub.getfNumber() == 203 && epub.getPass() == 1) {
-                    processRigaRFrame(false, table.select("tr").get(0));
+                    processRigaRFrameCompo(false, table.select("tr").get(0));
                     return 2;
                 } else {
                     log.error("");
@@ -597,7 +667,7 @@ public class EntryMain {
                             table.select("tr").get(0).select("td").get(0).text(), // link
                             table.select("tr").get(0).select("td").get(1).text() // R1 frame
                     );
-                    processRigaRFrame(false, table.select("tr").get(1));
+                    processRigaRFrameCompo(false, table.select("tr").get(1));
                     return 2;
                 } else {
                     log.error("");
@@ -906,7 +976,33 @@ public class EntryMain {
         setRTK2Frame(RTK2FramePar);
     }
 
+    public String getCompKanj2() {
+        return compKanj2;
+    }
 
+    public void setCompKanj2(String compKanj2) {
+        this.compKanj2 = compKanj2;
+    }
+
+    public String getCompReading2() {
+        return compReading2;
+    }
+
+    public void setCompReading2(String compReading2) {
+        this.compReading2 = compReading2;
+    }
+
+    public String getCompMean2() {
+        return compMean2;
+    }
+
+    public void setCompMean2(String compMean2) {
+        this.compMean2 = compMean2;
+    }
+
+
+    
+    
     boolean                                fillManually;
     EPUB_main                              epub;
 
@@ -927,11 +1023,17 @@ public class EntryMain {
     String                                 link2;
     int                                    RTK1Frame2;
 
-    // --- riga RFrame
+    // --- riga RFrame Compo1
     int                                    RTK2Frame;
     String                                 compKanj;
     String                                 compReading;
     String                                 compMean;
+    // compo2
+    String                                 compKanj2;
+    String                                 compReading2;
+    String                                 compMean2;
+
+    
     // --- da riga 3
     String                                 comment;
 

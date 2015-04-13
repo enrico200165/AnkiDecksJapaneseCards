@@ -154,7 +154,7 @@ public class FilesTablesF701Chap11 implements IPage {
         int fileNr = Utils.nrFromFName(filename);
 
         ret = ret && mEntry.processRigaKanji1(true,tableRows[0]);
-        ret = ret && mEntry.processRigaRFrame(true,tableRows[1]);
+        ret = ret && mEntry.processRigaRFrameCompo(true,tableRows[1]);
 
         /*
         if (tableRows[2] != null)
