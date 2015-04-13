@@ -104,6 +104,16 @@ public class EPUB_main {
 
     public static void main(String[] argc) {
         EPUB_main e = new EPUB_main();
+        
+        /* investigazione su problema caratteri, probabilmente dovuto a forma strana non
+        String source="I";
+        String displayed="喻";
+        int distance = Character.codePointAt(displayed,0) - Character.codePointAt(source,0);        
+        log.info("char distance"+ distance);
+        log.info(Character.toChars(Character.codePointAt("I",0)+distance)[0]);
+        log.info(Character.toChars(Character.codePointAt("臼",0)+distance)[0]);        
+         ancora inclusa in unicode
+         */
         e.processFiles();
 
     }

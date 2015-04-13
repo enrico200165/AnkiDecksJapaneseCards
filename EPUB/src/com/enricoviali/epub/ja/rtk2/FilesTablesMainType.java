@@ -65,6 +65,15 @@ public class FilesTablesMainType implements IPage {
             case 444: {
                 return Defs.TAB_ANOMALY_SPLIT;
             }
+            case 740: {
+                return Defs.TAB_ANOMALY;
+            }
+            case 754: 
+            case 760: 
+            case 765: 
+            case 771: {
+                return Defs.TAB_ANOMALY;
+            }
             case 880: {
                 return Defs.TAB_STD_SPLIT;
             }

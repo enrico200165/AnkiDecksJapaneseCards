@@ -8,6 +8,8 @@ public class Defs {
     static final int TAB_ANOMALY_SPLIT= 3;
     static final int TAB_UNKN= 9;
     
+
+    static final int INT_UNSET = -1;
     
     public final static String rowsSelector = ".calibre8" + " " + ".calibre9";
 }

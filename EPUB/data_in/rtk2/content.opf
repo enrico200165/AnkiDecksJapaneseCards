@@ -1,19 +1,19 @@
 <?xml version='1.0' encoding='utf-8'?>
 <package xmlns="http://www.idpf.org/2007/opf" unique-identifier="uuid_id" version="2.0">
-  <metadata xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:opf="http://www.idpf.org/2007/opf" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:calibre="http://calibre.kovidgoyal.net/2009/metadata" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <metadata xmlns:calibre="http://calibre.kovidgoyal.net/2009/metadata" xmlns:opf="http://www.idpf.org/2007/opf" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <dc:publisher>Univ of Hawaii Pr</dc:publisher>
-    <meta name="calibre:title_sort" content="Remembering the Kanji 2 (Kindle Fire HDX edition): A Systematic Guide to Reading Japanese Characters"/>
     <dc:language>en</dc:language>
-    <dc:creator opf:file-as="Heisig, James W." opf:role="aut">James W. Heisig</dc:creator>
-    <meta name="calibre:timestamp" content="2014-09-04T12:40:26.394000+00:00"/>
-    <dc:title>Remembering the Kanji 2 (Kindle Fire HDX edition): A Systematic Guide to Reading Japanese Characters</dc:title>
     <meta name="cover" content="cover"/>
-    <dc:date>2014-08-10T22:00:00+00:00</dc:date>
-    <dc:contributor opf:role="bkp">calibre (1.47.0) [http://calibre-ebook.com]</dc:contributor>
-    <dc:identifier opf:scheme="ISBN">9780824836696</dc:identifier>
     <dc:identifier opf:scheme="MOBI-ASIN">B00MGBB9TM</dc:identifier>
+    <dc:identifier opf:scheme="ISBN">9780824836696</dc:identifier>
     <dc:identifier id="uuid_id" opf:scheme="uuid">urn:uuid:db400116-28f3-431d-983d-c3b06747b839</dc:identifier>
     <dc:identifier opf:scheme="calibre">urn:uuid:db400116-28f3-431d-983d-c3b06747b839</dc:identifier>
+    <dc:contributor opf:role="bkp">calibre (2.22.0) [http://calibre-ebook.com]</dc:contributor>
+    <dc:creator opf:file-as="Heisig, James W." opf:role="aut">James W. Heisig</dc:creator>
+    <meta name="calibre:title_sort" content="Remembering the Kanji 2 (Kindle Fire HDX edition): A Systematic Guide to Reading Japanese Characters"/>
+    <meta name="calibre:timestamp" content="2014-09-04T12:40:26+00:00"/>
+    <dc:date>2014-08-10T22:00:00+00:00</dc:date>
+    <dc:title>Remembering the Kanji 2 (Kindle Fire HDX edition): A Systematic Guide to Reading Japanese Characters</dc:title>
   </metadata>
   <manifest>
     <item href="cover.jpeg" id="cover" media-type="image/jpeg"/>
@@ -149,8 +149,8 @@
     <itemref idref="id201"/>
   </spine>
   <guide>
-    <reference href="text/part0000_split_004.html#contents-anchor" title="Table of Contents" type="toc"/>
     <reference href="titlepage.xhtml" title="Cover" type="cover"/>
     <reference href="text/part0000_split_004.html#introduction-anchor" title="start" type="text"/>
+    <reference href="text/part0000_split_004.html#contents-anchor" title="Table of Contents" type="toc"/>
   </guide>
 </package>

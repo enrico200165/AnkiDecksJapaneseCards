@@ -26,13 +26,13 @@ public class EntryMain {
         signPrim = null;
         readings = null;
         link = null;
-        RTK1Frame = null;
+        RTK1Frame = Defs.INT_UNSET;
         // --- Kanji2
         kanji2 = null;
         signPrim2 = null;
         readings2 = null;
         link2 = null;
-        RTK1Frame2 = null;
+        RTK1Frame2 = Defs.INT_UNSET;
         // --- RFrame
         setRTK2Frame(-1);
         compKanj = null;
@@ -182,7 +182,7 @@ public class EntryMain {
         pos--; // usually 4
         if (overwrite || getRTK1Frame() <= 0) {
             Element RTK1FrameE = TDs.get(pos);
-            setRTK1Frame(RTK1FrameE.text());
+            setRTK1Frame(Integer.parseInt(RTK1FrameE.text()));
         }
 
         pos--; // 3
@@ -227,7 +227,7 @@ public class EntryMain {
         }
         if (overwrite || getRTK1Frame() == -1) {
             Element RTK1FrameE = TDs.get(pos);
-            setRTK1Frame2(RTK1FrameE.text());
+            setRTK1Frame2(Integer.parseInt(RTK1FrameE.text()));
         }
 
         pos--; // 3
@@ -301,8 +301,8 @@ public class EntryMain {
         return comment;
     }
 
-    public void setRTK1Frame(String rTK1Frame) {
-        RTK1Frame = rTK1Frame;
+    public void setRTK1Frame(int rTK1FramePar) {
+        RTK1Frame = rTK1FramePar;
     }
 
     public void setRTK2Frame(int rTK2Frame) {
@@ -528,6 +528,46 @@ public class EntryMain {
                 break;
             }
 
+            case 740: {
+                if (epub.getfNumber() == 202) {
+                    adHocKanji1(table,false, 
+                            table.select("tr").get(0).select("td").get(1).text(), // kanji 
+                            null /*sgnPrim*/, 
+                            table.select("tr").get(0).select("td").get(3).text()/*reading*/, 
+                            null /*lnkSel*/, 
+                            table.select("tr").get(0).select("td").get(5).text()/*R1FrSel*/);
+                    adHocFrameCompo(false, 
+                            table.select("tr").get(1).select("td").get(1).text() /*R2FramePar*/, 
+                            table.select("tr").get(1).select("td").get(2).text() /*compoPar*/, 
+                            table.select("tr").get(1).select("td").get(3).text() /*compoReadPar*/, 
+                            table.select("tr").get(1).select("td").get(4).text() /*compoMeanPar*/
+                            );
+                    return 2;
+                } else {
+                    log.error("");
+                }
+                break;
+            }
+            case 754: 
+            case 760: 
+            case 765: 
+            case 771: {
+                if (epub.getfNumber() == 202) {
+                    adHocKanji1(table,false, 
+                            table.select("tr").get(0).select("td").get(1).text(), // kanji 
+                            null /*sgnPrim*/, 
+                            table.select("tr").get(0).select("td").get(3).text()/*reading*/, 
+                            null /*lnkSel*/, 
+                            table.select("tr").get(0).select("td").get(5).text()/*R1FrSel*/);
+                    processRigaRFrame(false, table.select("tr").get(1));
+                    return 2;
+                } else {
+                    log.error("");
+                }
+                break;
+            }
+
+            
             case 880: {
                 if (epub.getfNumber() == 202) {
                     processRigaKanji1(true,  table.select("tr").first());
@@ -618,31 +658,31 @@ public class EntryMain {
      * limited info usually found in kanji row not to have too many parameters
      * similar fuctions for other rows
      */
-    boolean adHocKanji1(Element table, boolean overwrite, String kSel, String sgnPrim, String reading,
-            String lnkSel, String R1FrSel) {
-        if ((kSel != null)
+    boolean adHocKanji1(Element table, boolean overwrite, String kanjiPar, String sgnPrimPar, String readingPar,
+            String linkPar, String R1FrPar) {
+        if ((kanjiPar != null)
                 && (getKanji() == null || overwrite)) {
-            setKanji(kSel);
+            setKanji(kanjiPar);
         }
 
-        if ((sgnPrim != null)
+        if ((sgnPrimPar != null)
                 && (getSignPrim() == null || overwrite)) {
-            setSignPrim(table.select(sgnPrim).first().text());
+            setSignPrim(sgnPrimPar);
         }
 
-        if ((reading != null)
+        if ((readingPar != null)
                 && (getReadings() == null || overwrite)) {
-            setReadings(table.select(reading).first().text());
+            setReadings(readingPar);
         }
 
-        if ((link != null)
+        if ((linkPar != null)
                 && (getLink() == null || overwrite)) {
-            setLink(table.select(lnkSel).first().text());
+            setLink(linkPar);
         }
 
-        if ((RTK1Frame != null)
+        if ((R1FrPar != null)
                 && (getRTK1Frame() == -1 || overwrite)) {
-            setRTK1Frame(table.select(R1FrSel).first().text());
+            setRTK1Frame(Integer.parseInt(R1FrPar));
         }
 
         return true;
@@ -677,8 +717,8 @@ public class EntryMain {
         }
 
         if ((R1FrSel != null)
-                && (getRTK1Frame2() == null || overwrite)) {
-            setRTK1Frame2(R1FrSel);
+                && (getRTK1Frame2() == -1 || overwrite)) {
+            setRTK1Frame2(Integer.parseInt(R1FrSel));
         }
 
         return true;
@@ -734,7 +774,7 @@ public class EntryMain {
         else {
             setRTK2Frame(RTK2FrameStr.split("\\*")[0]);
         }
-        setRTK1Frame(RTK1Frame);
+        setRTK1Frame(Integer.parseInt(RTK1Frame));
 
         epub.addToNoCNReadEntries(this);
         log.debug("r-" + getRTK2Frame() + " previous " + epub.getPreviousRTK2Frame() + " ok");
@@ -776,10 +816,8 @@ public class EntryMain {
         setRTK2Frame(Integer.parseInt(s));
     }
 
-    public int getRTK1Frame() {
-        int ret;
-        ret = Integer.parseInt(this.RTK1Frame);
-        return ret;
+    public int getRTK1Frame() {        
+        return this.RTK1Frame;
     }
 
     public void setTableID(String id) {
@@ -826,12 +864,12 @@ public class EntryMain {
         this.link2 = link2;
     }
 
-    public String getRTK1Frame2() {
+    public int getRTK1Frame2() {
         return RTK1Frame2;
     }
 
-    public void setRTK1Frame2(String rTK1Frame2) {
-        RTK1Frame2 = rTK1Frame2;
+    public void setRTK1Frame2(int rTK1Frame2Par) {
+        this.RTK1Frame2 = rTK1Frame2Par;
     }
 
     public String getKanji2() {
@@ -881,13 +919,13 @@ public class EntryMain {
     String                                 signPrim;
     String                                 readings;
     String                                 link;
-    String                                 RTK1Frame;
+    int                                    RTK1Frame;
     // --- riga Kanji 1
     String                                 kanji2;
     String                                 signPrim2;
     String                                 readings2;
     String                                 link2;
-    String                                 RTK1Frame2;
+    int                                    RTK1Frame2;
 
     // --- riga RFrame
     int                                    RTK2Frame;
