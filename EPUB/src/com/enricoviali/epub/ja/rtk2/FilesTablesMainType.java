@@ -178,6 +178,8 @@ public class FilesTablesMainType implements IPage {
         this.workRows = table.select(Defs.rowsSelector);
         String wrongTableSel = "table";
 
+        procStatus.clearRows();
+        
         Elements embeddedTable;
         for (int i = 0; i < workRows.size(); i++) {
             // skip wrong rows containing table inside row
@@ -305,7 +307,8 @@ public class FilesTablesMainType implements IPage {
         return false;
     }
 
-
+    
+    
     TProcVars                              tProcVars;
 
     boolean                                xpageTableCompleting;

@@ -119,7 +119,8 @@ public class EntryMain {
 
         if (getKanji() == null || getKanji().length() > 1 || !CJKUtils.isAllKanji(getKanji(), false))
             if (getRTK2Frame() < 1) {
-                log.error("invalid RTK2 frame: " + getRTK2Frame());
+                log.error("invalid RTK2 frame: " + getRTK2Frame()+ " kanji:"+getKanji());
+                System.exit(1);
                 ret = false;
             }
         if (capitolo == null || capitolo.length() < 4) {

@@ -21,6 +21,14 @@ public class TProcVars {
         return s;
     }
     
+    
+    public void clearRows() {
+        kanji1Row = null;
+        kanji2Row = null;
+        RFrameRow = null;
+        CommentRow = null;        
+    }
+    
     Element t;
     
     Element kanji1Row;

@@ -169,8 +169,10 @@ public class EPUB_main {
         tablesScannedIncrOK();
         setPreviousTableID(table.cssSelector());
         setPreviousTableFile(getCurTableFile());
+        
         setPreviousRTK2Frame(mEntry.getRTK2Frame());
-        log.info(getfNumber() + " " + table.cssSelector() + " last-good/probably-prev: " + getPreviousRTK2Frame());
+        log.info(getfNumber() + " " + table.cssSelector() + " last-good/probably-prev: " 
+        + getPreviousRTK2Frame()+ " "+getmEntry().getKanji());
         return true;
     }
 
