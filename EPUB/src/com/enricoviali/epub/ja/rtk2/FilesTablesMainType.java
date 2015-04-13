@@ -47,10 +47,10 @@ public class FilesTablesMainType implements IPage {
         */
 
         if (skip) {
-            log.error("skipped "+epub.getCurTableFile()+ " "+ table.cssSelector()+" last good RTK2: "+epub.getPreviousRTK2Frame());
+            log.error("skipped " + epub.getCurTableFile() + " " + table.cssSelector() + " last good RTK2: " + epub.getPreviousRTK2Frame());
             log.debug("");
         }
-        
+
         return skip;
     }
 
@@ -86,9 +86,6 @@ public class FilesTablesMainType implements IPage {
 
     }
 
-
-    
-    
     /* (non-Javadoc)
      * @see com.enricoviali.epub.ja.rtk2.IPage#parsePage(int, org.jsoup.nodes.Document, java.lang.String)
      */
@@ -115,7 +112,6 @@ public class FilesTablesMainType implements IPage {
             // log.info(table.cssSelector()+ " "+epub.getCurTableNr());
             if (epub.getCurTableNr() == 317)
                 log.debug("");
-            
 
             switch (tableType(epub.getPreviousRTK2Frame())) {
                 case Defs.TAB_STANDARD: {
@@ -124,10 +120,15 @@ public class FilesTablesMainType implements IPage {
                     if (processTable(table)) {
                         epub.finalizeMainEntry(table, mEntry);
                     } else {
-                        log.error(filename + " " + table.cssSelector() + " errore tabella ");
-                        if (!processAnomaly(table)) {
-                            log.error("");
-                            System.exit(1);
+                        log.error("table std process failure: \n" +
+                                "current File=" + epub.getCurTableFile()
+                                + " cur file nr=" + epub.getfNumber()
+                                + " tables scanned=" + epub.getTablesScanned()
+                                + " pre table ID=" + epub.getPreviousTableID()
+                                + " prev RTK2 frame=" + epub.getPreviousRTK2Frame()
+                                );
+                        if (epub.getRTK2FrameFromTable(table) == (epub.getPreviousRTK2Frame() + 1)) {
+                            epub.finalizeBadEntry(table, mEntry, "it's bad man");
                         }
                     }
                     break;
@@ -137,7 +138,7 @@ public class FilesTablesMainType implements IPage {
                 case Defs.TAB_STD_SPLIT: {
                     if (epub.getPass() == 0) {
                         EntryMain mEntry = new EntryMain(this.epub);
-                        epub.setmEntry(mEntry);                        
+                        epub.setmEntry(mEntry);
                     }
                     if (epub.getPass() <= 1) {
                         int ret = epub.getmEntry().processAnomalyEntry(table);
@@ -173,13 +174,13 @@ public class FilesTablesMainType implements IPage {
      * Detects imperfections, fixes little imperfections, 
      * IMPLICITLY sets/produces the workable rows
      */
-    boolean preProcessRows(int fileNr, Element table, String filename, int scanNr, TProcVars procStatus) {
+    boolean preProcessRows(Element table, TProcVars procStatus) {
         boolean ret = true;
         this.workRows = table.select(Defs.rowsSelector);
         String wrongTableSel = "table";
 
         procStatus.clearRows();
-        
+
         Elements embeddedTable;
         for (int i = 0; i < workRows.size(); i++) {
             // skip wrong rows containing table inside row
@@ -212,10 +213,11 @@ public class FilesTablesMainType implements IPage {
                 tProcVars.nrRcgndRows++;
             } else {
                 ret = ret && false;
-                log.debug(fileNr + " " + table.cssSelector() + " unable to recognize row:\n" + workRows.get(i));
+                log.error(epub.getfNumber() + " " + table.cssSelector() + " teantive RTK2 from table: " + epub.getRTK2FrameFromTable(table)
+                        + " unable to recognize row:\n" + workRows.get(i));
             }
         }
-        return true;
+        return ret;
     }
 
     /* gestisce i casi normali e solo quelli
@@ -228,11 +230,10 @@ public class FilesTablesMainType implements IPage {
         boolean preProcOK = false;
         boolean finalizeOK = false;
         boolean checksOK = false;
-        preProcOK = preProcessRows(epub.getfNumber(), table, epub.getCurTableFile(), epub.getTablesScanned(), this.tProcVars);
+        preProcOK = preProcessRows(table, this.tProcVars);
 
         if (preProcOK) {
-            procOK = epub.getmEntry().processStandardEntry(tProcVars, epub.getCurTableFile(), epub.getCurTableNr(), epub.getTablesScanned(),
-                    tProcVars.nrNonEmptyRows);
+            procOK = epub.getmEntry().processStandardEntry(tProcVars);
         }
         if (procOK) {
             finalizeOK = finalizeEntry(epub.getCurTableFile(), table, epub.getmEntry());
@@ -261,20 +262,6 @@ public class FilesTablesMainType implements IPage {
 
         ret = ret && (prevFrNr + 1 == curFrNr);
         return ret;
-    }
-
-    boolean processAnomaly(Element table) {
-
-        log.error("procesAnomaly should manage: \n" +
-                "current File=" + epub.getCurTableFile()
-                + " cur file nr=" + epub.getfNumber()
-                + " tables scanned=" + epub.getTablesScanned()
-
-                + " pre table ID=" + epub.getPreviousTableID()
-                + " prev RTK2 frame=" + epub.getPreviousRTK2Frame()
-                );
-
-        return false;
     }
 
     boolean isLastBeforeTypeChange(Element table, int rtk2fr) {
@@ -307,8 +294,7 @@ public class FilesTablesMainType implements IPage {
         return false;
     }
 
-    
-    
+
     TProcVars                              tProcVars;
 
     boolean                                xpageTableCompleting;

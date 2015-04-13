@@ -1,8 +1,5 @@
 package com.enricoviali.epub.ja.rtk2;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-
 import org.apache.log4j.Logger;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -160,10 +157,10 @@ public class EntryMain {
         return s;
     }
 
-    public boolean processRigaKanji1(boolean overwrite, int fileNr, Element rigaKanji1) {
+    public boolean processRigaKanji1(boolean overwrite, Element rigaKanji1) {
 
         if (rigaKanji1 == null) {
-            log.debug(epub.getCurTableFile() + " " + tableID + " riga kanji1 is null");
+            log.error(epub.getCurTableFile() + " " + tableID + " riga kanji1 is null");
             return false;
         }
 
@@ -215,9 +212,7 @@ public class EntryMain {
         return true;
     }
 
-    public boolean processRigaKanji2(boolean overwrite, int fileNr, Element rigaKanji2, String filename, String tableID, int tableNr,
-            int scanNr,
-            int previousFrame) {
+    public boolean processRigaKanji2(boolean overwrite,Element rigaKanji2) {
 
         if (rigaKanji2 == null)
             return false;
@@ -382,8 +377,7 @@ public class EntryMain {
         return true;
     }
 
-    boolean processRigaComment(boolean overwrite, Element rigaComm, String filename, String tableID, int tableNr, int scanNr,
-            int tablesCounter) {
+    boolean processRigaComment(boolean overwrite, Element rigaComm) {
 
         if (rigaComm == null)
             return true;
@@ -415,28 +409,30 @@ public class EntryMain {
      * Dovrebbe elaborare solo i casi normali, e fallire se manca il minimo
      * @return
      */
-    boolean processStandardEntry(TProcVars pv, String filename, int tableNr, int scanNr, int previousFrame) {
+    boolean processStandardEntry(TProcVars pv) {
         boolean ret = true;
         String tableID = pv.t.cssSelector();
-        int fileNr = Utils.nrFromFName(filename);
 
-        if (!processRigaKanji1(true, fileNr, pv.kanji1Row))
+        if (epub.getPreviousRTK2Frame() == 190)
+            log.debug("breakpoint hook");
+        
+        if (!processRigaKanji1(true, pv.kanji1Row))
             ret = false;
-        if (!processRigaKanji2(true, fileNr, pv.kanji2Row, filename, pv.t.cssSelector(), tableNr, scanNr, epub.getCurTableNr())) {
+        if (!processRigaKanji2(true, pv.kanji2Row)) {
 
         }
         if (!processRigaRFrame(true, pv.RFrameRow)) {
             ret = false;
         }
 
-        if (!processRigaComment(true, pv.CommentRow, filename, pv.t.cssSelector(), tableNr, scanNr, epub.getCurTableNr())) {
+        if (!processRigaComment(true, pv.CommentRow)) {
         }
 
-        if (!ret && !splitTable(fileNr, tableNr)) {
-            log.error(filename + " tableNr: " + tableNr + " failed standard processing");
+        if (!ret && !splitTable(epub.getCurTableNr(), epub.getCurTableNr())) {
+            log.error(epub.getCurTableFile() + " tableNr: " + epub.getCurTableNr() + " failed standard processing");
             ret = false;
         }
-        log.debug("just for a brakpoint " + filename + " tableNr: " + tableNr);
+        log.debug("just for a brakpoint " + epub.getCurTableFile() + " tableNr: " + epub.getCurTableNr());
 
         return ret;
     }
@@ -456,6 +452,7 @@ public class EntryMain {
             case 184: { // forse anche anomala
                 if (epub.getfNumber() == 102) {
                     if (epub.getPass() == 0) {
+                        processRigaKanji1(true, table.select("tr").first());
                         Element td = rows.get(1).select("td").get(0);
                         String tmp = td.text();
                         setRTK2Frame(tmp);
@@ -477,9 +474,25 @@ public class EntryMain {
                 break;
             }
 
+            
+            case 190: { // normale, splittata
+                if (epub.getfNumber() == 103) {
+                    processRigaKanji1(true, table.select("tr").first());
+                    return 1;
+                } else if (epub.getfNumber() == 104) {
+                    processRigaRFrame(true, table.select("tr").first());
+                    return 2;
+                } else {
+                    log.error("");
+                    System.exit(1);
+                }
+                break;
+            }
+
+            
             case 315: { // normale, splittata
                 if (epub.getfNumber() == 103) {
-                    processRigaKanji1(true, epub.getfNumber(), table.select("tr").first());
+                    processRigaKanji1(true, table.select("tr").first());
                     return 1;
                 } else if (epub.getfNumber() == 104) {
                     processRigaRFrame(true, table.select("tr").first());
@@ -493,7 +506,7 @@ public class EntryMain {
 
             case 444: {
                 if (epub.getfNumber() == 104) {
-                    processRigaKanji1(true, epub.getfNumber(), table.select("tr").first());
+                    processRigaKanji1(true,  table.select("tr").first());
                     adHocFrameCompo(false,
                             table.select("tr").get(1).select("td").get(0).text() /* rframe2*/,
                             table.select("tr").get(1).select("td").get(1).text() /* compo */,
@@ -517,7 +530,7 @@ public class EntryMain {
 
             case 880: {
                 if (epub.getfNumber() == 202) {
-                    processRigaKanji1(true, epub.getfNumber(), table.select("tr").first());
+                    processRigaKanji1(true,  table.select("tr").first());
                     return 1;
                 } else if (epub.getfNumber() == 203 && epub.getPass() == 1) {
                     processRigaRFrame(false, table.select("tr").get(0));
@@ -530,7 +543,7 @@ public class EntryMain {
 
             case 1137: {
                 if (epub.getfNumber() == 300) {
-                    processRigaKanji1(true, epub.getfNumber(), table.select("tr").first());
+                    processRigaKanji1(true, table.select("tr").first());
                     adHocKanji2(table, false,
                             table.select("tr").get(1).select("td").get(0).text(), // kanji 
                             null/*sgnPrim*/,

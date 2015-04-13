@@ -177,6 +177,21 @@ public class EPUB_main {
     }
 
 
+    boolean finalizeBadEntry(Element table, EntryMain mEntry, String comment) {
+        mEntry.setComment(mEntry.getComment()+"\n###bad###");
+        addToMainEntries(mEntry);
+        tablesScannedIncrOK();
+        setPreviousTableID(table.cssSelector());
+        setPreviousTableFile(getCurTableFile());
+        
+        setPreviousRTK2Frame(getRTK2FrameFromTable(table));
+        log.info(getfNumber() + " " + table.cssSelector() + " last-good/probably-prev: " 
+        + getPreviousRTK2Frame()+ " "+getmEntry().getKanji()+ " ###bad###");
+        return true;
+    }
+
+    
+    
     // elementi di lavoro, dovrebbero essere variabili locali ma per gestire le
     // tabelle spezzate su due file devo mantener i valori
 

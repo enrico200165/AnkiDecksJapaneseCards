@@ -96,7 +96,7 @@ public class FilesTablesNoCNRead_F201Chap04 implements IPage {
         String tableID = table.cssSelector();
         int fileNr = Utils.nrFromFName(filename);
 
-        ret = ret && mEntry.processRigaKanji1(true,fileNr, tableRows[0]);
+        ret = ret && mEntry.processRigaKanji1(true, tableRows[0]);
         ret = ret && mEntry.processRigaRFrame(true,tableRows[1]);
 
         /*
