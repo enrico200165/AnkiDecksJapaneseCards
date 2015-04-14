@@ -27,7 +27,7 @@ public class FilesTablesF701Chap11 implements IPage {
     public void parseFiles(int fileNr, Document page, String filename) {
         String tablesSel = "table";
 
-        if (fileNr != 701) {
+        if (fileNr != 700 && fileNr != 701) {
             log.error("esco, chiamato per nr file sbagliato: " + fileNr);
             Utils.esco("");
         }

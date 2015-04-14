@@ -23,6 +23,24 @@ public class Utils {
         return ret;
     }
 
+    /**
+     * Parses sub-elements and generates text that tries to include newlines where
+     * appropriate, for instance with <p>
+     * @param e
+     * @return
+     */
+    public static String nlText(Element td) {
+        String s = "";
+
+        for (Element e : td.select("p")) {
+            if (e.select("p").size() > 1)
+                continue; // avoid duplication from nesting
+            s += e.text() + "\n";
+        }
+
+        return s;
+    }
+
     static int tableNr(String ID) {
         int ret;
         String s = ID.substring(7);
@@ -45,13 +63,27 @@ public class Utils {
         return ret;
     }
 
-    static boolean isKanjiRow(Element e) {
-        Element td = e.select("td").first();
+    static boolean isKanjiRow(Element row) {
+        Element td = row.select("td").first();
         String sub = td.text().trim();
-        if (sub.length() != 1)
+        if (sub.length() == 1) {
+            sub = sub.substring(0, 1);
+            if (CJKUtils.isAllKanji(sub, true))
+                return true;
+        }
+
+        int size = row.select("td").size() ; 
+        
+        // vediamo se è shiftato di 1 con casella (TD 0) vuota
+        boolean isShiftedOK = true;
+        isShiftedOK = isShiftedOK && (size-5) >= 0  &&CJKUtils.isAllKanji(row.select("td").get(size-5).text(), false);
+        isShiftedOK = isShiftedOK && (size-3) >= 0  && CJKUtils.isAllKanaSame(row.select("td").get(size -3).text(), false);
+        try {
+            Integer.parseInt(row.select("td").get(size -1 ).text());
+            return true;
+        } catch (NumberFormatException exc) {
             return false;
-        sub = sub.substring(0, 1);
-        return CJKUtils.isAllKanji(sub, true);
+        }
     }
 
     static boolean isFrameRow(Element e) {
@@ -71,7 +103,7 @@ public class Utils {
         return (withContent == 1);
     }
 
-    
+
     private static org.apache.log4j.Logger log = Logger.getLogger(Utils.class);
 
 }

@@ -116,7 +116,7 @@ public class EntryMain {
 
         if (getKanji() == null || getKanji().length() > 1 || !CJKUtils.isAllKanji(getKanji(), false))
             if (getRTK2Frame() < 1) {
-                log.error("invalid RTK2 frame: " + getRTK2Frame()+ " kanji:"+getKanji());
+                log.error("invalid RTK2 frame: " + getRTK2Frame() + " kanji:" + getKanji());
                 System.exit(1);
                 ret = false;
             }
@@ -212,7 +212,7 @@ public class EntryMain {
         return true;
     }
 
-    public boolean processRigaKanji2(boolean overwrite,Element rigaKanji2) {
+    public boolean processRigaKanji2(boolean overwrite, Element rigaKanji2) {
 
         if (rigaKanji2 == null)
             return false;
@@ -377,7 +377,6 @@ public class EntryMain {
         return true;
     }
 
-    
     boolean processRigaCompo2(boolean overwrite, Element rigaCompo2) {
 
         if (rigaCompo2 == null)
@@ -445,7 +444,6 @@ public class EntryMain {
         return true;
     }
 
-    
     boolean processRigaComment(boolean overwrite, Element rigaComm) {
 
         if (rigaComm == null)
@@ -484,7 +482,7 @@ public class EntryMain {
 
         if (epub.getPreviousRTK2Frame() == 190)
             log.debug("breakpoint hook");
-        
+
         if (!processRigaKanji1(true, pv.kanji1Row))
             ret = false;
         if (!processRigaKanji2(true, pv.kanji2Row)) {
@@ -543,7 +541,6 @@ public class EntryMain {
                 break;
             }
 
-            
             case 190: { // normale, splittata
                 if (epub.getfNumber() == 103) {
                     processRigaKanji1(true, table.select("tr").first());
@@ -558,7 +555,6 @@ public class EntryMain {
                 break;
             }
 
-            
             case 315: { // normale, splittata
                 if (epub.getfNumber() == 103) {
                     processRigaKanji1(true, table.select("tr").first());
@@ -575,7 +571,7 @@ public class EntryMain {
 
             case 444: {
                 if (epub.getfNumber() == 104) {
-                    processRigaKanji1(true,  table.select("tr").first());
+                    processRigaKanji1(true, table.select("tr").first());
                     adHocFrameCompo(false,
                             table.select("tr").get(1).select("td").get(0).text() /* rframe2*/,
                             table.select("tr").get(1).select("td").get(1).text() /* compo */,
@@ -597,37 +593,83 @@ public class EntryMain {
                 break;
             }
 
-            case 740: {
+            case 740:
+            case 746: {
                 if (epub.getfNumber() == 202) {
-                    adHocKanji1(table,false, 
+                    adHocKanji1(table, false,
                             table.select("tr").get(0).select("td").get(1).text(), // kanji 
-                            null /*sgnPrim*/, 
-                            table.select("tr").get(0).select("td").get(3).text()/*reading*/, 
-                            null /*lnkSel*/, 
+                            null /*sgnPrim*/,
+                            table.select("tr").get(0).select("td").get(3).text()/*reading*/,
+                            null /*lnkSel*/,
                             table.select("tr").get(0).select("td").get(5).text()/*R1FrSel*/);
-                    adHocFrameCompo(false, 
-                            table.select("tr").get(1).select("td").get(1).text() /*R2FramePar*/, 
-                            table.select("tr").get(1).select("td").get(2).text() /*compoPar*/, 
-                            table.select("tr").get(1).select("td").get(3).text() /*compoReadPar*/, 
+                    adHocFrameCompo(false,
+                            table.select("tr").get(1).select("td").get(1).text() /*R2FramePar*/,
+                            table.select("tr").get(1).select("td").get(2).text() /*compoPar*/,
+                            table.select("tr").get(1).select("td").get(3).text() /*compoReadPar*/,
                             table.select("tr").get(1).select("td").get(4).text() /*compoMeanPar*/
-                            );
+                    );
                     return 2;
                 } else {
                     log.error("");
                 }
                 break;
             }
-            case 754: 
-            case 760: 
-            case 765: 
-            case 771: 
+            case 754:
+            case 760:
+            case 765:
+            case 771: {
+                if (epub.getfNumber() == 202) {
+                    adHocKanji1(table, false,
+                            table.select("tr").get(0).select("td").get(1).text(), // kanji 
+                            null /*sgnPrim*/,
+                            table.select("tr").get(0).select("td").get(3).text()/*reading*/,
+                            null /*lnkSel*/,
+                            table.select("tr").get(0).select("td").get(5).text()/*R1FrSel*/);
+                    processRigaRFrameCompo(false, table.select("tr").get(1));
+                    return 2;
+                } else {
+                    log.error("");
+                }
+                break;
+            }
             case 772: {
                 if (epub.getfNumber() == 202) {
-                    adHocKanji1(table,false, 
+
+                    // ha due composti, su stessa riga, usa <p> diversi per dare graficamente illusione 2 righe
+                    // preservo questa finzione anche se forse sarebbe meglio spezzare su due vere righe/sub-entries
+                    adHocKanji1(table, false,
                             table.select("tr").get(0).select("td").get(1).text(), // kanji 
-                            null /*sgnPrim*/, 
-                            table.select("tr").get(0).select("td").get(3).text()/*reading*/, 
-                            null /*lnkSel*/, 
+                            null /*sgnPrim*/,
+                            table.select("tr").get(0).select("td").get(3).text()/*reading*/,
+                            null /*lnkSel*/,
+                            table.select("tr").get(0).select("td").get(5).text()/*R1FrSel*/);
+
+                    setComment("ha due composti, su stessa riga, usa <p> diversi per dare graficamente illusione" +
+                            " 2 righe. preservo questa finzione anche se forse sarebbe meglio spezzare su due vere "
+                            + "righe/sub-entries");
+
+                    setRTK2Frame(epub.getRTK2FrameFromTable(table));
+
+                    //log.info(Utils.nlText(table.select("tr").get(1).select("td").get(2)));
+                    setCompKanj(Utils.nlText(table.select("tr").get(1).select("td").get(2)));
+                    //log.info(Utils.nlText(table.select("tr").get(1).select("td").get(3)));
+                    setCompReading(Utils.nlText(table.select("tr").get(1).select("td").get(3)));
+                    //log.info(Utils.nlText(table.select("tr").get(1).select("td").get(4)));
+                    setCompMean(Utils.nlText(table.select("tr").get(1).select("td").get(4)));
+                    return 2;
+                } else {
+                    log.error("");
+                }
+                break;
+            }
+
+            case 773: {
+                if (epub.getfNumber() == 202) {
+                    adHocKanji1(table, false,
+                            table.select("tr").get(0).select("td").get(1).text(), // kanji 
+                            null /*sgnPrim*/,
+                            table.select("tr").get(0).select("td").get(3).text()/*reading*/,
+                            null /*lnkSel*/,
                             table.select("tr").get(0).select("td").get(5).text()/*R1FrSel*/);
                     processRigaRFrameCompo(false, table.select("tr").get(1));
                     return 2;
@@ -637,10 +679,26 @@ public class EntryMain {
                 break;
             }
 
-            
+            /*
+            case 780: 
+            case 785: 
+            case 789: 
+            case 794: 
+            case 799: 
+            case 804: {
+                if (epub.getfNumber() == 202) {
+                    processRigaKanji1(false, table.select("tr").get(0));
+                    processRigaRFrameCompo(false, table.select("tr").get(1));
+                    return 2;
+                } else {
+                    log.error("");
+                }
+                break;
+            }
+            */
             case 880: {
                 if (epub.getfNumber() == 202) {
-                    processRigaKanji1(true,  table.select("tr").first());
+                    processRigaKanji1(true, table.select("tr").first());
                     return 1;
                 } else if (epub.getfNumber() == 203 && epub.getPass() == 1) {
                     processRigaRFrameCompo(false, table.select("tr").get(0));
@@ -668,6 +726,104 @@ public class EntryMain {
                             table.select("tr").get(0).select("td").get(1).text() // R1 frame
                     );
                     processRigaRFrameCompo(false, table.select("tr").get(1));
+                    return 2;
+                } else {
+                    log.error("");
+                }
+                break;
+            }
+
+            case 1664: {
+                if (epub.getfNumber() == 305) {
+
+                    // ha due composti, su stessa riga, usa <p> diversi per dare graficamente illusione 2 righe
+                    // preservo questa finzione anche se forse sarebbe meglio spezzare su due vere righe/sub-entries
+                    processRigaKanji1(false, table.select("tr").get(0));
+                    processRigaRFrameCompo(false, table.select("tr").get(1));
+                    return 2;
+                } else if (epub.getfNumber() == 304) {
+                    log.debug("");
+                } else {
+                    log.error("");
+                }
+                break;
+            }
+
+            case 1730: {
+                if (epub.getfNumber() == 400) {
+
+                    setKanji(table.select("tr").get(0).select("td").get(0).text());
+                    setReadings(table.select("tr").get(0).select("td").get(2).text());
+                    setComment("RTK1 frame nr manca nella versione elettronica, prenderlo da cartaceo");
+
+                    processRigaRFrameCompo(false, table.select("tr").get(1));
+                    return 2;
+                } else if (epub.getfNumber() == 304) {
+                    log.debug("");
+                } else {
+                    log.error("");
+                }
+                break;
+            }
+
+            case 1791: {
+                if (epub.getfNumber() == 400) {
+                    processRigaKanji1(false, table.select("tr").get(0));
+                    return 1;
+                } else if (epub.getfNumber() == 401) {
+                    processRigaRFrameCompo(false, table.select("tr").get(0));
+                    return 2;
+                } else {
+                    log.error("");
+                }
+                break;
+            }
+            case 1992: {
+                if (epub.getfNumber() == 500) {
+                    processRigaKanji1(false, table.select("tr").get(1));
+                    return 1;
+                } else if (epub.getfNumber() == 501) {
+                    processRigaRFrameCompo(false, table.select("tr").get(0));
+                    return 2;
+                } else {
+                    log.error("");
+                }
+                break;
+            }
+
+            /*
+            case 2184: {
+                if (epub.getfNumber() == 601) {
+                    processRigaKanji1(false, table.select("tr").get(0));
+                    processRigaRFrameCompo(false, table.select("tr").get(1));
+                    return 2;
+                } else {
+                    log.error("");
+                }
+                break;
+            } 
+            */
+
+            case 2211: {
+                if (epub.getfNumber() == 601) {
+                    processRigaKanji1(false, table.select("tr").get(0));
+                    processRigaRFrameCompo(false, table.select("tr").get(1));
+                    return 2;
+                } else {
+                    log.error("");
+                }
+                break;
+            }
+
+            case 2326: {
+                if (epub.getfNumber() == 602) {
+                    processRigaKanji1(false, table.select("tr").get(0));
+                    setComment("tabella corrotta, sitemala a mano");
+                    log.error("frame 2327 corrotto, inseriscilo a mano, forzo previou RFrame");
+                    return 1;
+                } else if (epub.getfNumber() == 603) {
+                    epub.setPreviousRTK2Frame(2326);
+                    setRTK2Frame(2327);
                     return 2;
                 } else {
                     log.error("");
@@ -886,7 +1042,7 @@ public class EntryMain {
         setRTK2Frame(Integer.parseInt(s));
     }
 
-    public int getRTK1Frame() {        
+    public int getRTK1Frame() {
         return this.RTK1Frame;
     }
 
@@ -1001,8 +1157,6 @@ public class EntryMain {
     }
 
 
-    
-    
     boolean                                fillManually;
     EPUB_main                              epub;
 
@@ -1033,7 +1187,6 @@ public class EntryMain {
     String                                 compReading2;
     String                                 compMean2;
 
-    
     // --- da riga 3
     String                                 comment;
 

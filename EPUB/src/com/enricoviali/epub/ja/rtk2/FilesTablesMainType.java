@@ -65,20 +65,52 @@ public class FilesTablesMainType implements IPage {
             case 444: {
                 return Defs.TAB_ANOMALY_SPLIT;
             }
-            case 740: {
-                return Defs.TAB_ANOMALY;
-            }
+            
+            /*
+            case 740: 
+            case 746: 
             case 754: 
             case 760: 
             case 765: 
             case 771: 
-            case 772: {
+            case 772:  
+            case 773:  
+            case 780:
+            case 785: 
+            case 789: 
+            case 794:
+            case 799: 
+            case 804: {
                 return Defs.TAB_ANOMALY;
             }
-            case 880: {
-                return Defs.TAB_STD_SPLIT;
-            }
+            */
+            
+            
+            case 880: 
             case 1137: {
+                return Defs.TAB_ANOMALY_SPLIT;
+            }
+            case 1730: {
+                return Defs.TAB_ANOMALY;
+            }
+            case 1791: {
+                return Defs.TAB_ANOMALY_SPLIT;
+            }
+            case 1992: {
+                return Defs.TAB_ANOMALY;
+            }
+            
+            /* probabilmente piena di errori, va riempita a mano
+            case 2184: {
+                return Defs.TAB_ANOMALY;
+            }
+            */
+            
+            case 2211: {
+                return Defs.TAB_ANOMALY;
+            }
+
+            case 2326: {
                 return Defs.TAB_ANOMALY_SPLIT;
             }
 
@@ -139,6 +171,11 @@ public class FilesTablesMainType implements IPage {
                                 );
                         if (epub.getRTK2FrameFromTable(table) == (epub.getPreviousRTK2Frame() + 1)) {
                             epub.finalizeBadEntry(table, mEntry, "it's bad man");
+                        } else {
+                            if(epub.getPreviousRTK2Frame() == 2184) {
+                                log.error("porcata, forziamo previou RTK2 in alcuni casi, adesso a: "+(epub.getPreviousRTK2Frame()+1));                                
+                                epub.setPreviousRTK2Frame(epub.getPreviousRTK2Frame()+1);
+                            }
                         }
                     }
                     break;
