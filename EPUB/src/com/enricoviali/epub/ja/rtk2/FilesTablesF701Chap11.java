@@ -1,4 +1,5 @@
 package com.enricoviali.epub.ja.rtk2;
+
 import org.apache.log4j.Logger;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -8,14 +9,7 @@ public class FilesTablesF701Chap11 implements IPage {
 
     FilesTablesF701Chap11(EPUB_main epubPar) {
         this.epub = epubPar;
-        clearRows();
-        
-    }
 
-    void clearRows() {
-        tableRows = new Element[5];
-        for (int i = 0; i < tableRows.length; i++)
-            tableRows[i] = null;
     }
 
     boolean tableToSkip(int tableNr, int fileNr) {
@@ -32,156 +26,61 @@ public class FilesTablesF701Chap11 implements IPage {
             Utils.esco("");
         }
 
-        log.info("fileNr: " + fileNr);
+        // log.info("fileNr: " + fileNr);
         Elements tablesInPage = page.select(tablesSel);
         for (Element table : tablesInPage) {
             epub.tablesScannedIncr();
             epub.setCurTableNr(Utils.tableNr(table.cssSelector()));
 
-            if (processTable(table)) {
-                epub.tablesScannedIncrOK();
-            } else {
-                log.error("");
-            }
-            // log.error("error in table scan, " + filename + " tableCounter=" +
-            // tablesCounter + " selector: " + table.cssSelector());
+            if (2 <= epub.getCurTableNr() && epub.getCurTableNr() <= 5)
+                if (processTable(table)) {
+                    epub.tablesScannedIncrOK();
+                } else {
+                    log.error("");
+                }
         }
     }
 
     public boolean processTable(Element table) {
         final String entrySelector = ".generated-style-3-override6";
 
-        
-        if (tableToSkip(epub.getCurTableNr(), epub.getfNumber())) {
-            // crea entry co contenuti dummy e riconscibile per successiva correzione manuale
-            EntryMain mEntry = new EntryMain(this.epub); // entry to be added
-            String msg = epub.getCurTableFile() + " tableID=" + table.cssSelector() + " previousFrame=" + epub.getPreviousRTK2Frame() + " gestire a mano";
-            log.error(msg);
-            mEntry.setKanji("狭*");
-            mEntry.setComment(msg);
-            epub.addToMainEntries(mEntry);
-            log.warn("forse dovrei forzare continuità frame");
-            return true;
+        log.info(table.cssSelector() + " " + table.select("tr").size());
+
+        for (Element riga : table.select("tr")) {
+            if (riga.select("td").size() != 3)
+                log.error(riga.select("td").size() + riga.text());
+            processRow(riga);
         }
+        return true;
+    }
 
-        // mEntry.setTableID(table.cssSelector());
+    public boolean processRow(Element row) {
+        final String entrySelector = ".generated-style-3-override6";
 
-        if (epub.getPreviousTableID().equals(table.cssSelector())) {
-            log.warn("same table: " + epub.getPreviousTableID() + " \nprevious: " + epub.getPreviousTableFile() + " \nfile    : " + epub.getCurTableFile());
-            return true;
-        }
+        mEntry = new EntryMain(this.epub, Defs.ENTRY_TYPE_MNE_KUN);
 
-        // log.info(filename + " " + scanNr + "/" + this.nr +
-        // ": ----------------------------------------" + "\n" + table.html());
-
-        Elements celleRiga = table.select(entrySelector);
-        assert(celleRiga.size() == 5);
-
-        if (celleRiga.size() > 1) {
-            log.error("zero o una riga, esco");
-//            System.exit(1);
-            return true
-                   ;
-        }
-
-        int nrNonEmptyRows = 0;
-        for (int i = 0; i < celleRiga.size(); i++) {
-            if (celleRiga.get(i).text().trim().length() > 0) {
-                this.tableRows[i] = celleRiga.get(i);
-                nrNonEmptyRows++;
-            }
-        }
-
-        EntryMain mEntry = null;
-        if (nrNonEmptyRows <= 1) {
-            log.error("");
-            return true;
-        }
-        if (nrNonEmptyRows == 2) {
-            mEntry = processStandardEntry(table, tableRows[0], tableRows[1], tableRows[2], epub.getCurTableFile(), epub.getCurTableNr(), epub.getTablesScanned(), nrNonEmptyRows);
-        }
-        if (nrNonEmptyRows == 3) {
-            boolean terzaCommento = (nrNonEmptyRows == 2 && tableRows[2].select("td").size() <= 3);
-            if (terzaCommento) {
-                log.info("comment: " + tableRows[2].text());
-                mEntry = processStandardEntry(table, tableRows[0], tableRows[1], tableRows[2], epub.getCurTableFile(), epub.getCurTableNr(), epub.getTablesScanned(), nrNonEmptyRows);
-            } else {
-                log.error("");
-                return true;
-            }
-        }
-        if (nrNonEmptyRows == 4) {
-            log.error("");
-            return true;
-        }
-
-        // --- --- ---- elaboriamo righe --- ---- ---- ----
-
-        if (epub.getCurTableNr() == 0 && mEntry.getRTK2Frame() == 762) {
-            log.warn("salto tabella di esempio");
-            return true;
-        }
-
-        if (mEntry.getRTK2Frame() != epub.getPreviousRTK2Frame() + 1) {
-            log.error("discontinuità rFrames, \nprevious=" + epub.getPreviousRTK2Frame() + " \ncurrent=  " + mEntry.getRTK2Frame());
-            // Utils.esco("discontinuità rFrames");
-        }
-
-        if (mEntry.isValid(0)) {
-            epub.curTableNrInc();
-            epub.addToMainEntries(mEntry);
-            epub.setPreviousRTK2Frame(mEntry.getRTK2Frame());
-            // log.info("lastGoodFrame: " + previousFrame);
+        mEntry.setKanji(row.select("td").get(0).text());
+        mEntry.setReadings(row.select("td").get(1).text());
+        mEntry.setCompMean(row.select("td").get(2).text());  // porcata ma uso questo per non creare altro campo
+        mEntry.setRTK2Frame(epub.getPreviousRTK2Frame()+1);
+        epub.setPreviousRTK2Frame(mEntry.getRTK2Frame());
+        if (mEntry.isValid(Defs.ENTRY_TYPE_MNE_KUN)) {
+            epub.addToKunMnemonics(mEntry);
+            log.info(epub.getCurTableFile() + " rk2-"+ mEntry.getRTK2Frame());
         } else {
-            log.warn("entry not complete");
+            log.error("");
+            System.exit(1);
         }
-
-        if (mEntry.getRTK2Frame() != epub.getCurTableNr()) {
-                log.warn("file: " + epub.getCurTableFile() + " scollamento contatory: rFrame=" + mEntry.getRTK2Frame() + " tablesCounter=" + epub.getCurTableNr() + " selector: " + table.cssSelector());
-        }
-
-        // log.info(mEntry.toString());
-
-        epub.setPreviousTableID(table.cssSelector());
-        epub.setPreviousTableFile(epub.getCurTableFile());
-        return true;
-    }
-
-    EntryMain processStandardEntry(Element table, Element riga1, Element riga2, Element riga3, String filename, int tableNr, int scanNr, int previousFrame) {
-        EntryMain mEntry = new EntryMain(this.epub); // entry to be added
-        boolean ret = true;
-        String tableID = table.cssSelector();
-        int fileNr = Utils.nrFromFName(filename);
-
-        ret = ret && mEntry.processRigaKanji1(true,tableRows[0]);
-        ret = ret && mEntry.processRigaRFrameCompo(true,tableRows[1]);
-
-        /*
-        if (tableRows[2] != null)
-            ret = ret && mEntry.processRiga3(tableRows[2], filename, table.cssSelector(), tableNr, scanNr, epub.getCurTableNr());
-       
-        */
-        if (ret)
-            return mEntry;
-        else
-            return null;
-    }
-    
-    boolean processRiga3(Element riga3, String filename, String tableID, int tableNr, int scanNr, int tablesCounter) {
-
-        Elements TDs = riga3.select("td");
-        int pos = TDs.size();
-        Element cur;
-
-        pos--; // usually 3
-        cur = TDs.get(pos);
+            
+        // log.info(mEntry.getKanji() + " - " + mEntry.getReadings()+ " - "  + mEntry.getCompMean());
 
         return true;
     }
 
 
-    EPUB_main                              epub;
+    EntryMain                              mEntry;
     Element[]                              tableRows;
+    EPUB_main                              epub;
 
     private static org.apache.log4j.Logger log = Logger.getLogger(FilesTablesF701Chap11.class);
 

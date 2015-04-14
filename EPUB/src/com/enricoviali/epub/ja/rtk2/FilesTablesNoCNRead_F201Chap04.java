@@ -9,7 +9,7 @@ public class FilesTablesNoCNRead_F201Chap04 implements IPage {
     FilesTablesNoCNRead_F201Chap04(EPUB_main epubPar) {
         this.epub = epubPar;
         clearRows();
-        mEntry = new EntryMain(epubPar);
+        mEntry = new EntryMain(epubPar,Defs.ENTRY_TYPE_NO_ON);
     }
 
     void clearRows() {
@@ -91,7 +91,7 @@ public class FilesTablesNoCNRead_F201Chap04 implements IPage {
     
     
     EntryMain processStandardEntry(Element table, Element riga1, Element riga2, Element riga3, String filename, int tableNr, int scanNr, int previousFrame) {
-        EntryMain mEntry = new EntryMain(this.epub); // entry to be added
+        EntryMain mEntry = new EntryMain(this.epub,Defs.ENTRY_TYPE_NO_ON); // entry to be added
         boolean ret = true;
         String tableID = table.cssSelector();
         int fileNr = Utils.nrFromFName(filename);

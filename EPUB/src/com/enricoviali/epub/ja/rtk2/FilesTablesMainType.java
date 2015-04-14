@@ -157,7 +157,7 @@ public class FilesTablesMainType implements IPage {
 
             switch (tableType(epub.getPreviousRTK2Frame())) {
                 case Defs.TAB_STANDARD: {
-                    EntryMain mEntry = new EntryMain(this.epub);
+                    EntryMain mEntry = new EntryMain(this.epub,Defs.ENTRY_TYPE_MAIN);
                     epub.setmEntry(mEntry);
                     if (processTable(table)) {
                         epub.finalizeMainEntry(table, mEntry);
@@ -184,7 +184,7 @@ public class FilesTablesMainType implements IPage {
                 case Defs.TAB_ANOMALY_SPLIT:
                 case Defs.TAB_STD_SPLIT: {
                     if (epub.getPass() == 0) {
-                        EntryMain mEntry = new EntryMain(this.epub);
+                        EntryMain mEntry = new EntryMain(this.epub, Defs.ENTRY_TYPE_MAIN);
                         epub.setmEntry(mEntry);
                     }
                     if (epub.getPass() <= 1) {

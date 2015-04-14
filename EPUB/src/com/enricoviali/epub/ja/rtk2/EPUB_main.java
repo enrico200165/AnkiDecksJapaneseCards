@@ -22,7 +22,7 @@ public class EPUB_main {
     void reset() {
         entriesMain = new ArrayList<EntryMain>();
         noCNReading = new ArrayList<EntryMain>();
-
+        kunMnemonics= new ArrayList<EntryMain>();
         suspendedTable = 0;
         previousTableID = "";
         previousTableFile = "";
@@ -60,10 +60,9 @@ public class EPUB_main {
         if (202 <= fNumber && fnumber < 700) {
             return pageMainType;
         }
-        if (700 <= fNumber) {
+        if (700 <= fNumber && fNumber <= 701) {
             return pageF701Chap11;
         }
-        log.error("maggiore di 800");
         return null;
     }
 
@@ -85,6 +84,8 @@ public class EPUB_main {
             Document ePage = parseFile(fileEntry);
 
             pageParser = selectParser(fNumber);
+            if (pageParser == null)
+                break;
             pageParser.parseFiles(fNumber, ePage, fileEntry.getName());
 
             setPreviousTableFile(fileEntry.getName());
@@ -104,7 +105,7 @@ public class EPUB_main {
 
     public static void main(String[] argc) {
         EPUB_main e = new EPUB_main();
-        
+
         /* investigazione su problema caratteri, probabilmente dovuto a forma strana non
         String source="I";
         String displayed="喻";
@@ -179,29 +180,26 @@ public class EPUB_main {
         tablesScannedIncrOK();
         setPreviousTableID(table.cssSelector());
         setPreviousTableFile(getCurTableFile());
-        
+
         setPreviousRTK2Frame(mEntry.getRTK2Frame());
-        log.info(getfNumber() + " " + table.cssSelector() + " last-good/probably-prev: " 
-        + getPreviousRTK2Frame()+ " "+getmEntry().getKanji());
+        log.info(getfNumber() + " " + table.cssSelector() + " last-good/probably-prev: " + getPreviousRTK2Frame()+ " "+getmEntry().getKanji());
         return true;
     }
 
-
     boolean finalizeBadEntry(Element table, EntryMain mEntry, String comment) {
-        mEntry.setComment(mEntry.getComment()+"\n###bad###");
+        mEntry.setComment(mEntry.getComment() + "\n###bad###");
         addToMainEntries(mEntry);
         tablesScannedIncrOK();
         setPreviousTableID(table.cssSelector());
         setPreviousTableFile(getCurTableFile());
-        
+
         setPreviousRTK2Frame(getRTK2FrameFromTable(table));
-        log.info(getfNumber() + " " + table.cssSelector() + " last-good/probably-prev: " 
-        + getPreviousRTK2Frame()+ " "+getmEntry().getKanji()+ " ###bad###");
+        log.info(getfNumber() + " " + table.cssSelector() + " last-good/probably-prev: "
+                + getPreviousRTK2Frame() + " " + getmEntry().getKanji() + " ###bad###");
         return true;
     }
 
-    
-    
+
     // elementi di lavoro, dovrebbero essere variabili locali ma per gestire le
     // tabelle spezzate su due file devo mantener i valori
 
@@ -256,7 +254,15 @@ public class EPUB_main {
         this.noCNReading.add(mEntry);
     }
 
+    
+    public void addToKunMnemonics(EntryMain mEntry) {
+        this.kunMnemonics.add(mEntry);
+    }
+
+    
     public int getPreviousRTK2Frame() {
+        if (previousRTK2Frame >= 2409)
+            log.debug("");
         return previousRTK2Frame;
     }
 
@@ -355,6 +361,7 @@ public class EPUB_main {
 
     ArrayList<EntryMain>                   entriesMain;
     ArrayList<EntryMain>                   noCNReading;
+    ArrayList<EntryMain>                   kunMnemonics;
 
     int                                    previousRTK2Frame;
 

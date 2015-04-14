@@ -8,13 +8,16 @@ import com.enrico_viali.jacn.common.CJKUtils;
 
 public class EntryMain {
 
-    public EntryMain(EPUB_main epubPar) {
+    public EntryMain(EPUB_main epubPar, int typePar) {
         selectors = new Selectors();
         this.epub = epubPar;
+        this.entryType = typePar;
         reset();
     }
 
     void reset() {
+
+        entryType = Defs.INT_UNSET;
 
         fillManually = false;
 
@@ -90,7 +93,7 @@ public class EntryMain {
 
         // 09_potpourri
 
-        log.error(getRTK2Frame());
+        // log.error(getRTK2Frame());
 
         return "error";
     }
@@ -650,11 +653,8 @@ public class EntryMain {
 
                     setRTK2Frame(epub.getRTK2FrameFromTable(table));
 
-                    //log.info(Utils.nlText(table.select("tr").get(1).select("td").get(2)));
                     setCompKanj(Utils.nlText(table.select("tr").get(1).select("td").get(2)));
-                    //log.info(Utils.nlText(table.select("tr").get(1).select("td").get(3)));
                     setCompReading(Utils.nlText(table.select("tr").get(1).select("td").get(3)));
-                    //log.info(Utils.nlText(table.select("tr").get(1).select("td").get(4)));
                     setCompMean(Utils.nlText(table.select("tr").get(1).select("td").get(4)));
                     return 2;
                 } else {
@@ -1156,9 +1156,20 @@ public class EntryMain {
         this.compMean2 = compMean2;
     }
 
+    public int getEntryType() {
+        return entryType;
+    }
+    
+    public void setEntryType(int entryType) {
+        this.entryType = entryType;
+    }
+    
 
     boolean                                fillManually;
     EPUB_main                              epub;
+
+    int                                    entryType;
+
 
     String                                 capitolo;
     String                                 tableID;
