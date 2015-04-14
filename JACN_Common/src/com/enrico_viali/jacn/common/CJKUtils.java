@@ -12,11 +12,12 @@ public class CJKUtils {
     char KATAKANA_START = '\u30A1';
     char KATAKANA_END   = '\u30F6';
 
+
     public static String remParen(String s) {
         String replace = s.replaceFirst("\\([^)]*\\)", "");
         return replace;
     }
-    
+
     public CJKUtils() {
         super();
         lessonsX10LastKanji = new HashMap<Integer, Integer>();
@@ -162,6 +163,21 @@ public class CJKUtils {
         ret = ret && !containsKanji(s);
         return ret;
     }
+
+    public static boolean isAllEastern(String s, boolean spaceOk) {
+        boolean ret = true;
+        for (int i = 0; i < s.length(); i++) {
+            if (Character.UnicodeBlock.of(s.charAt(i)) == Character.UnicodeBlock.HIRAGANA
+                    || Character.UnicodeBlock.of(s.charAt(i)) == Character.UnicodeBlock.KATAKANA
+                    || Character.UnicodeBlock.of(s.charAt(i)) == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS) {
+
+            } else {
+                return false;
+            }
+        }
+        return true;
+    }
+
 
     Map<Integer, Integer>                  lessonsX10LastKanji;
     private static org.apache.log4j.Logger log = Logger.getLogger(CJKUtils.class);
