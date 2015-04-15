@@ -17,8 +17,6 @@ public class EntryMain {
 
     void reset() {
 
-        entryType = Defs.INT_UNSET;
-
         fillManually = false;
 
         tableID = null;
@@ -114,24 +112,64 @@ public class EntryMain {
     public boolean isValid(int type) {
         boolean ret = true;
 
+        if (getRTK2Frame() < 1) {
+            log.error(epub.curCoordinates() + " invalid RTK2 frame: " + getRTK2Frame() + " kanji:" + getKanji());
+            // System.exit(1);
+            return false;
+        }
+        /* fa crashare il programma
+        if (getRTK2Frame() != (epub.getPreviousRTK2Frame()+1)) {
+            log.error(epub.curCoordinates()+" invalid RTK2 frame: " + getRTK2Frame() + " kanji:" + getKanji());
+            // System.exit(1);
+            return false;
+        }
+        */
+
+        if (!(this.entryType == Defs.ENTRY_TYPE_MAIN || this.entryType == Defs.ENTRY_TYPE_MNE_KUN
+        || this.entryType == Defs.ENTRY_TYPE_NO_ON)) {
+            log.error(epub.curCoordinates() + " invalid entry type: " + this.entryType);
+            return false;
+        }
+
         if (fillManually)
             return true;
 
-        if (getKanji() == null || getKanji().length() > 1 || !CJKUtils.isAllKanji(getKanji(), false))
-            if (getRTK2Frame() < 1) {
-                log.error("invalid RTK2 frame: " + getRTK2Frame() + " kanji:" + getKanji());
-                System.exit(1);
-                ret = false;
-            }
-        if (capitolo == null || capitolo.length() < 4) {
-            log.error("capitolo invalid : " + getCapitolo());
-            ret = false;
+        // --- kanji field ---
+        if (getKanji() == null) {
+            log.error("null kanji");
+            return false;
         }
-        if (type == 1) { // no chinese reading
-            return true;
+        if (!CJKUtils.isAllEastern(getKanji(), true)) {
+            log.error(epub.curCoordinates() + " invalid kanji: " + getKanji() + " kanji:" + getKanji());
+            // System.exit(1);
+            return false;
+        }
+        if ((this.entryType == Defs.ENTRY_TYPE_MAIN)) {
+            if ((getKanji().length() != 1) || !CJKUtils.isAllKanji(getKanji(), false)) {
+                log.error(epub.curCoordinates()+" invalid kanji: " + getKanji() + " kanji:" + getKanji());
+                return false;
+            }
+        }
+
+        // --- signal primitive ---
+        if (getSignPrim() != null && getSignPrim().length() > 0) {
+            if (getSignPrim().length() != 1) {
+                log.error(epub.curCoordinates()+" signal primitive wrong length: "+getSignPrim().length()+" "+getSignPrim());
+                return false;
+            }
+            if (!CJKUtils.isAllEastern(getSignPrim(), false)) {
+                log.error(epub.curCoordinates()+" signal primitive: bad characters: "+getSignPrim());
+                return false;
+            }
+        }
+
+        if (capitolo == null || capitolo.length() < 4) {
+            log.error(epub.curCoordinates()+" capitolo invalid : " + getCapitolo());
+            return false;
         }
 
         if (!ret) {
+            log.warn(epub.curCoordinates()+" entry not valid"+"\n"+toString());
             log.info("brakpoint hook");
             // qui sarebbe il caso di fare un dump della tabella, dovrei inserire un puntatore che però potrebbe essere nulll  log.warn("");
         }
@@ -147,15 +185,19 @@ public class EntryMain {
         String eq = "=";
         String s = "";
 
-        s += sep + "table" + eq + getTableID();
-        s += sep + "capitolo";
+
         s += sep + "kanji" + eq + kanji;
         s += sep + "signal primitive" + eq + signPrim;
         s += sep + "On" + eq + readings;
         s += sep + "link" + eq + link;
         s += sep + "RTK1Frame" + eq + RTK1Frame;
-        // da riga 2
+
         s += sep + "RTK2Frame" + eq + getRTK2Frame();
+
+        
+        s += sep + "table" + eq + getTableID();
+        s += sep + "capitolo";
+        // da riga 2
 
         return s;
     }
@@ -1159,17 +1201,16 @@ public class EntryMain {
     public int getEntryType() {
         return entryType;
     }
-    
+
     public void setEntryType(int entryType) {
         this.entryType = entryType;
     }
-    
+
 
     boolean                                fillManually;
     EPUB_main                              epub;
 
     int                                    entryType;
-
 
     String                                 capitolo;
     String                                 tableID;

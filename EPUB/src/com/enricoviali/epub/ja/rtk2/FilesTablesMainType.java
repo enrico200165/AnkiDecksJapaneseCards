@@ -25,7 +25,10 @@ public class FilesTablesMainType implements IPage {
     boolean tableToSkip(Element table, int fileNr, int tableNr) {
         boolean skip = false;
 
-        skip |= (tableNr == 1 && (fileNr == 5)); // tabella di esempio
+        if (tableNr == 1 && (fileNr == 5)) {  
+            // tabella di esempio, esco subito per non dare warning
+            return true;
+        }
         skip |= (tableNr == 201 && fileNr == 103); // embeddata in una riga
         /*
         skip |= (tableNr == 185 && (fileNr == 102 || fileNr == 103));
@@ -329,12 +332,10 @@ public class FilesTablesMainType implements IPage {
 
         // --- if change of table we must write
         if (e != null) {
-            if (e.isValid(0)) {
+            if (e.isValid(Defs.ENTRY_TYPE_MAIN)) {
                 return true;
             } else {
-                log.warn(fileName + " " + table.cssSelector() + " entry not valid");
-                log.error("invalid esco");
-                System.exit(1);
+                log.warn(fileName + " " + table.cssSelector() + " entry not valid, previous RTK2 frame: "+epub.getPreviousRTK2Frame());
                 return false;
             }
         }

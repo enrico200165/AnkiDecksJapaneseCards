@@ -43,6 +43,10 @@ public class Utils {
 
     static int tableNr(String ID) {
         int ret;
+        if (ID.length() <=7) {
+            log.error("invalid table ID: "+ID);
+            return -1;
+        }
         String s = ID.substring(7);
         ret = Integer.parseInt(s);
         return ret;

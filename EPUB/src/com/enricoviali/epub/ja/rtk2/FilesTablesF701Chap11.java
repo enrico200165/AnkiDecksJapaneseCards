@@ -68,8 +68,7 @@ public class FilesTablesF701Chap11 implements IPage {
             epub.addToKunMnemonics(mEntry);
             log.info(epub.getCurTableFile() + " rk2-"+ mEntry.getRTK2Frame());
         } else {
-            log.error("");
-            System.exit(1);
+            log.error("invalid entry: rk-"+mEntry.getRTK2Frame() + " previous from epub: rk-"+epub.getPreviousRTK2Frame());
         }
             
         // log.info(mEntry.getKanji() + " - " + mEntry.getReadings()+ " - "  + mEntry.getCompMean());

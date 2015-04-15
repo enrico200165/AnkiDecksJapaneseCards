@@ -22,7 +22,7 @@ public class EPUB_main {
     void reset() {
         entriesMain = new ArrayList<EntryMain>();
         noCNReading = new ArrayList<EntryMain>();
-        kunMnemonics= new ArrayList<EntryMain>();
+        kunMnemonics = new ArrayList<EntryMain>();
         suspendedTable = 0;
         previousTableID = "";
         previousTableFile = "";
@@ -92,7 +92,7 @@ public class EPUB_main {
             fileEntry = null;
             System.gc();
         }
-        log.info("================= normale uscita =======================");
+        log.error("================= normale uscita ======================="+"\n"+summary());
     }
 
     /**
@@ -182,7 +182,8 @@ public class EPUB_main {
         setPreviousTableFile(getCurTableFile());
 
         setPreviousRTK2Frame(mEntry.getRTK2Frame());
-        log.info(getfNumber() + " " + table.cssSelector() + " last-good/probably-prev: " + getPreviousRTK2Frame()+ " "+getmEntry().getKanji());
+        log.info(getfNumber() + " " + table.cssSelector() + " last-good/probably-prev: " + getPreviousRTK2Frame() + " "
+                + getmEntry().getKanji());
         return true;
     }
 
@@ -254,12 +255,10 @@ public class EPUB_main {
         this.noCNReading.add(mEntry);
     }
 
-    
     public void addToKunMnemonics(EntryMain mEntry) {
         this.kunMnemonics.add(mEntry);
     }
 
-    
     public int getPreviousRTK2Frame() {
         if (previousRTK2Frame >= 2409)
             log.debug("");
@@ -278,6 +277,14 @@ public class EPUB_main {
             log.debug("just to break");
     }
 
+    public String curCoordinates() {
+        String s = "";
+        s += getCurTableFile();
+        s += " table="+getCurTableNr();        
+        s += " r2-"+getPreviousRTK2Frame();
+        return s;
+    }
+    
     public String getPreviousTableFile() {
         return previousTableFile;
     }
@@ -336,6 +343,14 @@ public class EPUB_main {
 
     public void setmEntry(EntryMain mEntry) {
         this.mEntry = mEntry;
+    }
+
+    public String summary() {
+        String s = "";
+        s += "main entries: " + this.entriesMain.size();
+        s += " no CN entries: " + this.noCNReading.size();        
+        s += " Kun mnemonics entries: " + this.kunMnemonics.size();
+        return s;
     }
 
 
